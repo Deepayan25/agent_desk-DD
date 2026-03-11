@@ -1,10 +1,22 @@
 import subprocess
 
-command = input("Enter a command: ")
+def open_app(app_name):
+    try:
+        subprocess.Popen("cmd /c start " + app_name, shell=True)
+    except Exception as e:
+        print("Could not open:", app_name)
 
-if command == "hello":
-    print("agent: Hello! How can I assist you today?")
+print("AgentDesk started. Type 'exit' to stop.")
 
-if command == "open notepad":
-    print("agent: Opening Notepad for you...")
-    subprocess.run(["notepad"]) 
+while True:
+    command = input(">> ").strip().lower()
+
+    if command == "exit":
+        print("AgentDesk shutting down...")
+        break
+
+    if command.startswith("open "):
+        app = command.split("open ", 1)[1]
+        open_app(app)
+    else:
+        print("Unknown command") 
