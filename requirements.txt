@@ -1,1 +1,7 @@
-# No external dependencies yet
+existing_modules used :
+- webbrowser
+- pyautogui
+- time
+
+modules created :
+- actions.py

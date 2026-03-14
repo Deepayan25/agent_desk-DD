@@ -1,12 +1,23 @@
 import subprocess
-
-def open_app(app_name):
-    try:
-        subprocess.Popen("cmd /c start " + app_name, shell=True)
-    except Exception as e:
-        print("Could not open:", app_name)
+import actions
 
 print("AgentDesk started. Type 'exit' to stop.")
+
+def action_parser(command, actions):
+    words = command.split()
+
+    if not words:
+        return
+
+    action = words[0]
+    data = " ".join(words[1:])
+
+    if action in actions:
+        actions[action](data)
+    else:
+        print("Unknown command") 
+
+
 
 while True:
     command = input(">> ").strip().lower()
@@ -15,8 +26,6 @@ while True:
         print("AgentDesk shutting down...")
         break
 
-    if command.startswith("open "):
-        app = command.split("open ", 1)[1]
-        open_app(app)
-    else:
-        print("Unknown command") 
+    action_parser(command, actions.actions)
+
+    
