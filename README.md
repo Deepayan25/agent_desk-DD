@@ -17,7 +17,7 @@ open chrome
 exit
 ```
 
-## new update features ( date : 14 - 03 - 2026)
+## v0.2features ( date : 14 - 03 - 2026)
 
 Current Features
 - Continuous command loop
@@ -27,11 +27,15 @@ Current Features
 - Modular action system (actions.py)
 - Command parser for routing actions
 
+## v0.2.1 features ( date : 18 - 03 - 2026)
+
+- multiple command running
+- sequential comman running
+
 Example Commands
 
 open notepad
-open chrome
-type hello world
+open notepad and type hello world
 search python threading
 exit
 
