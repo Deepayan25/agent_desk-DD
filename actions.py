@@ -11,7 +11,6 @@ def open_app(target):
     
 def type_text(text):
     try:
-        time.sleep(2)  
         pyautogui.write(text, interval=0.05)
     except Exception as e:
         print("Typing failed:", e)
@@ -40,10 +39,29 @@ def backspace(data):
     except Exception as e:
         print("Failed to press backspace:", e)
 
+def wait(sec):
+    try:
+        seconds = int(sec) if sec.isdigit() else 1
+        time.sleep(seconds)
+    except Exception as e:
+        print("Wait failed:", e)           
+
 actions = {
     "open": open_app,
     "type": type_text,
     "search": search_web,
+    "wait": wait,   
     "enter": press_enter,
     "del": backspace
+}
+
+aliases = {
+    "ggl": "chrome",
+    "np": "notepad",
+    "cal": "calculator",
+    "vscode": "code",
+    "word": "winword",
+    "xl": "excel",
+    "gpt": "chatgpt",
+    "ppt": "powerpnt",
 }
