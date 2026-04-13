@@ -6,21 +6,17 @@ import webbrowser
 def open_app(target):
     try:
         subprocess.Popen(["cmd", "/c", "start", target])
+        time.sleep(2)  
     except Exception as e:
         print("Could not open:", target)
     
 def type_text(text):
     try:
         pyautogui.write(text, interval=0.05)
+        if not text:
+           print("No text provided to type.")
     except Exception as e:
         print("Typing failed:", e)
-
-def search_web(query):
-    try:
-        url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
-        webbrowser.open(url)
-    except Exception as e:
-        print("Web search failed:", e)
 
 def press_enter(_):
     try:
@@ -41,18 +37,33 @@ def backspace(data):
 
 def wait(sec):
     try:
-        seconds = int(sec) if sec.isdigit() else 1
+        if not sec:
+            seconds = 1
+        elif not sec.isdigit():
+            print("Invalid wait time")
+            return
+        else:
+            seconds = int(sec)
         time.sleep(seconds)
+
     except Exception as e:
-        print("Wait failed:", e)           
+        print("Wait failed:", e)
+
+def focus_search(_):
+    try:
+        pyautogui.click(500,300)
+        pyautogui.press('/')
+    except Exception as e:
+        print("Failed to focus search bar:", e)        
 
 actions = {
     "open": open_app,
     "type": type_text,
-    "search": search_web,
     "wait": wait,   
     "enter": press_enter,
-    "del": backspace
+    "del": backspace,
+    "focus": focus_search
+
 }
 
 aliases = {

@@ -1,6 +1,6 @@
 import actions as action_module
-
-print("AgentDesk started. Type 'exit' to stop.")
+import intent as intent_module
+print("Hi there! I'm AgentDesk, your personal desktop assistant. How can I help you today?")
 
 def action_parser(command, actions):
     words = command.split()
@@ -17,14 +17,22 @@ def action_parser(command, actions):
     if action in action_module.actions:
         action_module.actions[action](data)
     else:
-        print("Unknown command") 
+        print(f"Unknown command: {action}")
 
 while True:
     command = input(">> ").strip().lower()
 
-    if command == "exit":
-        print("AgentDesk shutting down...")
-        break                               
+    if command == "end":
+        print("Goodbye! Have a great day!")
+        break   
+
+    parsed = intent_module.parse_intent(command)
+    if parsed:
+        command = parsed
+    else:
+        print("Could not understand the command. Please try again.")
+        continue
+
     commands = command.replace(" and ", ",").split(",")
     commands = [cmd.strip() for cmd in commands if cmd.strip()]
     for cmd in commands:

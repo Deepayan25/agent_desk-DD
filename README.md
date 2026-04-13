@@ -17,7 +17,7 @@ open chrome
 exit
 ```
 
-## v0.2features ( date : 14 - 03 - 2026)
+## v0.2features ( date : 14 - 03 - 2026 )
 
 Current Features
 - Continuous command loop
@@ -27,7 +27,7 @@ Current Features
 - Modular action system (actions.py)
 - Command parser for routing actions
 
-## v0.2.1 features ( date : 18 - 03 - 2026)
+## v0.2.1 features ( date : 18 - 03 - 2026 )
 
 - multiple command running
 - sequential comman running
@@ -38,6 +38,16 @@ open notepad
 open notepad and type hello world
 search python threading
 exit
+
+## v0.3 features ( date : 13 - 04 - 2026 )
+
+- basic intent parsing (natural language to commands)
+- stopword filtering for cleaner input processing
+- keyword-based action detection (play, search, watch, etc.)
+- dynamic query extraction from user input
+- default platform handling (e.g., YouTube for media queries)
+- integration of intent layer with command execution pipeline
+
 
 ## Project Goal
 
