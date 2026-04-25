@@ -1,8 +1,12 @@
-existing_modules used :
-- webbrowser
+modules used (external):
 - pyautogui
-- time
 
-modules created :
+modules used (built-in):
+- webbrowser
+- subprocess
+- time
+- re
+
+modules created:
 - actions.py
 - intent.py

@@ -2,19 +2,84 @@ def parse_intent(user_input):
     user_input = user_input.lower()
     words = user_input.split()
 
-    app_keywords = ["youtube","notepad"]
-    action_keywords = ["play","write","open", "type","search", "watch","listen"]
-    stopwords = ["i", "want", "to", "wish", "would", "like", "please", "me"]
+    primitive_actions = ["open", "wait", "enter", "del", "focus"]
+    if words[0] in primitive_actions:
+        return {"action": words[0], "query": " ".join(words[1:]), "platform": None}
+    if not words:
+        return None
+    platform_map = {
+        "youtube": "youtube",
+        "yt": "youtube",
+        "google": "google",
+        "notepad": "notepad",
+        "notes": "notepad",
+        "np": "notepad",
+        "ggl": "google",
+        "xl" : "excel",
+        "word": "winword",
+    }
 
-    words = user_input.lower().split()
+    action_keywords = ["play", "write", "open", "type", "search", "watch", "listen", "find"]
+    stopwords = ["i", "want", "to", "wish", "would", "like", "please", "me", "can", "you", "could", "in", "on", "the", "a", "an"]
+    question_patterns = ["what is", "what are", "how to", "who is", "where is", "why is"]
+
+    # question pattern check before anything else
+    for pattern in question_patterns:
+        if user_input.startswith(pattern):
+            query = user_input.replace(pattern, "").strip()
+            return {"action": "search", "query": query, "platform": "google"}
+
     clean_words = [w for w in words if w not in stopwords]
 
+    noise_words = ["while", "when", "whilst", "during"]
+    for i, w in enumerate(clean_words):
+        if w in noise_words:
+            clean_words = clean_words[:i]
+            break
+    
+    if not clean_words:
+        return None
+
+    # extract platform modifier
+    platform = None
+    for word, mapped in platform_map.items():
+        if word in clean_words:
+            platform = mapped
+            clean_words = [w for w in clean_words if w != word]
+            break
+
     if any(w in clean_words for w in action_keywords):
-          query_words = [w for w in clean_words if w not in action_keywords]
-          query = " ".join(query_words)
-    if query:
-            return f"open chrome, type youtube.com, enter, wait 5, focus, type {query}, enter"
-    else:
-            return "open chrome, type youtube.com, enter, wait 5, focus"
         
-    return None
+        if "open" in clean_words:
+            target_words = [w for w in clean_words if w not in action_keywords]
+
+            if target_words:
+                target = " ".join(target_words)
+            elif platform:
+                target = platform
+            else:
+                target = None
+
+            return {"action": "open", "query": target, "platform": platform} if target else None        
+
+        if any(w in clean_words for w in ["search", "find"]):
+            query = " ".join([w for w in clean_words if w not in action_keywords])
+            return {"action": "search", "query": query, "platform": platform or "google"} if query else None
+
+        if any(w in clean_words for w in ["play", "watch", "listen"]):
+            query = " ".join([w for w in clean_words if w not in action_keywords])
+            return {"action": "play", "query": query, "platform": platform or "youtube"} if query else None
+
+        if any(w in clean_words for w in ["type", "write"]):
+            text = " ".join([w for w in clean_words if w not in action_keywords])
+            print(f"DEBUG type block: text='{text}', platform='{platform}'")
+            if not text:
+                return None
+            if platform:
+                return [
+                    {"action": "open", "query": platform, "platform": None},
+                    {"action": "type", "query": text, "platform": None}
+                ]
+            return {"action": "type", "query": text, "platform": None}
+
+        return None
