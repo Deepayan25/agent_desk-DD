@@ -2,11 +2,12 @@ def parse_intent(user_input):
     user_input = user_input.lower()
     words = user_input.split()
 
+    if not words:
+        return None
+    
     primitive_actions = ["open", "wait", "enter", "del", "focus"]
     if words[0] in primitive_actions:
         return {"action": words[0], "query": " ".join(words[1:]), "platform": None}
-    if not words:
-        return None
     platform_map = {
         "youtube": "youtube",
         "yt": "youtube",
@@ -20,7 +21,7 @@ def parse_intent(user_input):
     }
 
     action_keywords = ["play", "write", "open", "type", "search", "watch", "listen", "find"]
-    stopwords = ["i", "want", "to", "wish", "would", "like", "please", "me", "can", "you", "could", "in", "on", "the", "a", "an"]
+    stopwords = ["i", "want", "to", "wish", "would", "like", "please", "me", "can", "you", "could", "in", "on", "at", "from", "the", "a", "an"]
     question_patterns = ["what is", "what are", "how to", "who is", "where is", "why is"]
 
     # question pattern check before anything else

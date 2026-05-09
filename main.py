@@ -49,7 +49,7 @@ while True:
     if not raw:
         continue
 
-    split_pattern = r'\band|\band then\b|\bthen\b|\bafter that\b'
+    split_pattern = r'\band\b |\band then\b|\bthen\b|\bafter that\b'
     chunks = re.split(split_pattern, raw)
     
     for chunk in chunks:
