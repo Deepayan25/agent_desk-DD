@@ -79,3 +79,26 @@ Future versions of AgentDesk will include:
 2. Install dependencies
 pip install pyautogui
 3. Run the agent
+
+## Codebase Graph Viewer
+
+To generate an interactive graph of the current Python codebase:
+
+```bash
+python visualize_codebase.py
+```
+
+This creates `codebase_graph.html` in the project root.
+
+The viewer shows:
+- modules
+- top-level functions
+- local import relationships
+- external dependencies
+- call references collected from the Python AST
+
+You can open the generated HTML file in a browser and:
+- drag nodes
+- zoom and pan
+- filter node and edge types
+- inspect neighbors of a selected node
