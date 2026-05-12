@@ -1,104 +1,107 @@
 # AgentDesk
 
-AgentDesk is a command-activated desktop automation agent written in Python.
-The goal of the project is to build a local AI assistant capable of executing system commands, automating tasks, and eventually understanding natural language instructions.
+AgentDesk is a natural language desktop automation agent built in Python.
+It converts plain English commands into executable desktop actions — opening apps, typing text, searching the web, and more.
 
-## v0.1 Features
+---
 
+## How to Run
+
+```bash
+# Install dependencies
+pip install pyautogui
+
+# Run the agent
+python main.py
+```
+
+---
+
+## Project Architecture
+
+```
+main.py       — input loop, sequential splitting, execution queue, workflow state
+intent.py     — natural language → structured intent (dict)
+actions.py    — actual execution of each action
+```
+
+---
+
+## Version History
+
+### v0.1
 - Interactive command loop
-- Open desktop applications through commands
-- Runs continuously until the user exits
+- Open desktop applications
+- Runs until user types `exit`
 
-Example usage:
-open notepad
-open chrome
-exit
-
-## v0.2 features ( date : 14 - 03 - 2026 )
-
-- Continuous command loop
-- Application launcher (open apps)
+### v0.2 — 14 Mar 2026
 - Text typing automation
 - Web search command
-- Modular action system (actions.py)
-- Command parser for routing actions
+- Modular action system via `actions.py`
 
-## v0.2.1 features ( date : 18 - 03 - 2026 )
+### v0.2.1 — 18 Mar 2026
+- Sequential command execution
+- Multiple commands in one input
 
-- Multiple command running
-- Sequential command running
+### v0.3 — 13 Apr 2026
+- Basic intent parsing (natural language → commands)
+- Stopword filtering
+- Keyword-based action detection
+- Default platform handling (e.g. YouTube for media queries)
 
-Example Commands:
-open notepad
-open notepad and type hello world
-search python threading
-exit
-
-## v0.3 features ( date : 13 - 04 - 2026 )
-
-- Basic intent parsing (natural language to commands)
-- Stopword filtering for cleaner input processing
-- Keyword-based action detection (play, search, watch, etc.)
-- Dynamic query extraction from user input
-- Default platform handling (e.g., YouTube for media queries)
-- Integration of intent layer with command execution pipeline
-
-## v0.4 features ( date : 25 - 04 - 2026 )
-
-- Structured intent output (dict-based pipeline)
-- Multi-intent sequential splitting (`then`, `and then`, `after that`)
+### v0.4 — 25 Apr 2026
+- Structured dict-based intent pipeline
+- Sequential splitting via `then`, `and then`, `after that`
 - Platform modifier extraction (`in youtube`, `on google`)
-- Question patterns mapped to search (`what is`, `how to`, `who is`, etc.)
+- Question patterns mapped to search (`what is`, `how to`, etc.)
 - Noise word stripping (`while coding`, `during work`)
-- Compound action handling (`type X in notepad` → open then type)
-- Alias mapping restored and integrated into dict pipeline
-- Auto-wait between sequential commands for stable execution
+- Compound action handling (`type X in notepad` → open, then type)
+- Alias mapping (`np` → notepad, `ggl` → chrome, etc.)
+- Auto-wait between sequential commands
 
-Example Commands:
+### v0.4.1 — 11 May 2026
+- Fixed crash on empty input (guard order fix)
+- Fixed `\band` regex matching inside words
+- Added missing stopwords (`on`, `at`, `from`)
+
+### v0.5a — 12 May 2026
+- Workflow state tracking (`workflow_state` dict)
+- Execution queue — all intents parsed and flattened before execution
+- `total_steps` and `current_step` tracked accurately
+- Success/failure detection across all actions
+- Agent now knows what it did, what succeeded, and what failed
+
+---
+
+## Example Commands
+
+```
+open notepad
 search python in youtube
 what is machine learning
 play lofi while i work
 open notepad then type hello world
 type hello in np
 i want to search django then play lofi music
+```
 
-## Project Goal
+---
 
-Future versions of AgentDesk will include:
-
-* Context-aware stateful command execution
-* Smart auto-wait based on app load detection
-* Multi-platform search routing
-* Full natural language understanding
-* Workflow automation
-* Permission-based application control
-
-## How to Run
-
-1. Clone the repository
-2. Install dependencies
-pip install pyautogui
-3. Run the agent
-
-## Codebase Graph Viewer
-
-To generate an interactive graph of the current Python codebase:
+## Codebase Visualizer
 
 ```bash
 python visualize_codebase.py
 ```
 
-This creates `codebase_graph.html` in the project root.
+Generates `codebase_graph.html` — an interactive graph showing modules, functions, imports, and call references. Open in any browser.
 
-The viewer shows:
-- modules
-- top-level functions
-- local import relationships
-- external dependencies
-- call references collected from the Python AST
+---
 
-You can open the generated HTML file in a browser and:
-- drag nodes
-- zoom and pan
-- filter node and edge types
-- inspect neighbors of a selected node
+## Project Goal
+
+Building toward a fully local, natural language desktop agent with:
+- Context-aware stateful execution
+- Failure recovery with alternative paths
+- Smart auto-wait based on app load detection
+- Full NLU pipeline
+- Desktop UI (no terminal required)

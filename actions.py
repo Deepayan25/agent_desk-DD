@@ -12,7 +12,9 @@ def open_app(target, platform=None):
         time.sleep(2)  
     except Exception as e:
         print("Could not open:", target)
-    
+        return False
+    return True
+
 def type_text(text, platform=None):
     if not text:
         print("No text provided to type.")
@@ -21,12 +23,16 @@ def type_text(text, platform=None):
         pyautogui.write(text, interval=0.05)
     except Exception as e:
         print("Typing failed:", e)
+        return False
+    return True
 
 def press_enter(_):
     try:
         pyautogui.press('enter')
     except Exception as e:
         print("Failed to press enter:", e)
+        return False
+    return True
 
 def backspace(data, platform=None):
     try:
@@ -38,6 +44,8 @@ def backspace(data, platform=None):
             pyautogui.hotkey("ctrl", "backspace")
     except Exception as e:
         print("Failed to press backspace:", e)
+        return False
+    return True
 
 def wait(sec, platform=None):
     try:
@@ -45,6 +53,8 @@ def wait(sec, platform=None):
         time.sleep(seconds)
     except Exception as e:
         print("Wait failed:", e)
+        return False
+    return True
 
 def focus_search(_, platform=None):
     try:
@@ -53,7 +63,9 @@ def focus_search(_, platform=None):
         time.sleep(0.3)
         pyautogui.hotkey('ctrl', 'l') 
     except Exception as e:
-        print("Failed to focus search bar:", e)    
+        print("Failed to focus search bar:", e)
+        return False
+    return True
 
 def search_web(query, platform="google"):
     if not query:
@@ -72,6 +84,8 @@ def search_web(query, platform="google"):
             print(f"Search not supported on {platform}")
     except Exception as e:
         print("Search failed:", e)
+        return False
+    return True
 
 def play_on_youtube(query, platform="youtube"):
     if not query:
@@ -86,6 +100,8 @@ def play_on_youtube(query, platform="youtube"):
         webbrowser.open(url)
     except Exception as e:
         print("Play failed:", e)
+        return False
+    return True
 
 actions = {
     "open": open_app,

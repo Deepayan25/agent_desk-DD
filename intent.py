@@ -73,7 +73,6 @@ def parse_intent(user_input):
 
         if any(w in clean_words for w in ["type", "write"]):
             text = " ".join([w for w in clean_words if w not in action_keywords])
-            print(f"DEBUG type block: text='{text}', platform='{platform}'")
             if not text:
                 return None
             if platform:
