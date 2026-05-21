@@ -252,252 +252,397 @@ def build_graph(modules: Dict[str, ModuleInfo]) -> Dict[str, object]:
 def render_html(graph: Dict[str, object], title: str) -> str:
     escaped_title = html.escape(title)
     graph_json = json.dumps(graph, indent=2)
-    template = """<!DOCTYPE html>
+    template = """
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>__TITLE__</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    :root {{
-      --bg: #04070d;
-      --bg-grid: rgba(59, 130, 246, 0.08);
-      --panel: rgba(5, 12, 22, 0.92);
-      --panel-2: rgba(8, 18, 32, 0.88);
-      --border: rgba(96, 165, 250, 0.18);
-      --text: #d8f3ff;
-      --muted: #89a9c7;
-      --accent: #22d3ee;
-      --accent-2: #7c3aed;
-      --success: #2dd4bf;
-      --warning: #f59e0b;
+    :root {
+      --bg: #040810;
+      --grid: rgba(0, 245, 212, 0.055);
+      --panel: rgba(4, 10, 22, 0.96);
+      --panel-2: rgba(6, 14, 28, 0.92);
+      --border: rgba(0, 245, 212, 0.14);
+      --border-hi: rgba(0, 245, 212, 0.38);
+      --text: #e2f4ff;
+      --muted: #6b93b0;
+      --dim: #3a566b;
+      --accent: #00f5d4;
+      --accent-dim: rgba(0, 245, 212, 0.12);
+      --accent-2: #6c3fff;
+      --amber: #ffbe0b;
+      --amber-dim: rgba(255, 190, 11, 0.12);
+      --danger: #ff4d6d;
       --module: #38bdf8;
-      --function: #22c55e;
-      --external: #fb7185;
-      --symbol: #a78bfa;
-      --selected: #f8fafc;
-      --neighbor: #67e8f9;
-      --trace: #f59e0b;
-      --danger: #ef4444;
-    }}
+      --function: #00f5d4;
+      --external: #ff4d6d;
+      --symbol: #9d7eff;
+      --selected: #ffffff;
+      --neighbor: #00f5d4;
+      --trace: #ffbe0b;
+      --r: 10px;
+      --r-sm: 6px;
+    }
 
-    * {{
-      box-sizing: border-box;
-    }}
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body {{
-      margin: 0;
+    body {
       color: var(--text);
       min-height: 100vh;
-      font-family: "Cascadia Code", "Consolas", "Segoe UI", monospace;
-      background:
-        linear-gradient(rgba(4, 7, 13, 0.94), rgba(4, 7, 13, 0.98)),
-        radial-gradient(circle at 20% 0%, rgba(34, 211, 238, 0.2), transparent 26%),
-        radial-gradient(circle at 80% 15%, rgba(124, 58, 237, 0.22), transparent 24%),
-        radial-gradient(circle at 50% 100%, rgba(34, 197, 94, 0.16), transparent 28%),
-        var(--bg);
-      background-color: var(--bg);
+      font-family: 'Oxanium', 'Segoe UI', sans-serif;
+      background: var(--bg);
       display: grid;
-      grid-template-columns: 320px minmax(0, 1fr) 360px;
-    }}
+      grid-template-columns: 300px minmax(0, 1fr) 340px;
+    }
 
-    body::before {{
+    /* Grid overlay */
+    body::before {
       content: "";
       position: fixed;
       inset: 0;
       background-image:
-        linear-gradient(var(--bg-grid) 1px, transparent 1px),
-        linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
-      background-size: 36px 36px;
+        linear-gradient(var(--grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+      background-size: 40px 40px;
       pointer-events: none;
-      mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.75), transparent 92%);
-    }}
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent 88%);
+      z-index: 0;
+    }
 
-    .panel {{
+    /* ─── Scrollbars ─── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 99px; }
+
+    /* ─── Panels ─── */
+    .panel {
       position: relative;
       z-index: 1;
-      padding: 22px;
-      background: linear-gradient(180deg, rgba(8, 18, 32, 0.95), rgba(5, 12, 22, 0.9));
-      backdrop-filter: blur(18px);
+      padding: 20px 18px;
+      background: var(--panel);
       border-right: 1px solid var(--border);
-      overflow: auto;
+      overflow-y: auto;
       max-height: 100vh;
-    }}
-
-    .panel.right {{
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .panel.right {
       border-right: none;
       border-left: 1px solid var(--border);
-    }}
+    }
 
-    .eyebrow {{
+    /* ─── Brand header ─── */
+    .brand {
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 8px;
+    }
+    .brand-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.28em;
       color: var(--accent);
       text-transform: uppercase;
-      letter-spacing: 0.22em;
-      font-size: 0.72rem;
-      margin-bottom: 10px;
-    }}
+      margin-bottom: 6px;
+    }
+    .brand-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+      color: var(--text);
+    }
+    .brand-title span { color: var(--accent); }
 
-    h1 {{
-      margin: 0 0 12px;
-      font-size: 1.55rem;
-      line-height: 1.15;
-      text-shadow: 0 0 18px rgba(34, 211, 238, 0.2);
-    }}
-
-    h2 {{
-      margin: 24px 0 12px;
-      font-size: 0.9rem;
-      color: var(--accent);
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-    }}
-
-    p, li {{
-      color: var(--muted);
-      line-height: 1.55;
-    }}
-
-    .stats {{
+    /* ─── Stats row ─── */
+    .stats {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 18px;
-    }}
-
-    .card, .section-box {{
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      padding: 10px 0;
+    }
+    .stat-card {
+      background: var(--accent-dim);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      background:
-        linear-gradient(180deg, rgba(11, 27, 48, 0.88), rgba(8, 18, 32, 0.92));
-      box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.03),
-        0 0 0 1px rgba(34, 211, 238, 0.02),
-        0 18px 40px rgba(0, 0, 0, 0.28);
-    }}
-
-    .card {{
-      padding: 12px;
-    }}
-
-    .card strong {{
+      border-radius: var(--r-sm);
+      padding: 8px 6px;
+      text-align: center;
+    }
+    .stat-card strong {
       display: block;
-      margin-bottom: 4px;
-      color: var(--text);
-      font-size: 1.25rem;
-    }}
-
-    .section-box {{
-      padding: 14px;
-      margin-top: 12px;
-    }}
-
-    .filters {{
-      display: grid;
-      gap: 10px;
-    }}
-
-    label {{
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: var(--text);
-      font-size: 0.92rem;
-    }}
-
-    input[type="search"],
-    textarea {{
-      width: 100%;
-      padding: 12px 14px;
-      border-radius: 14px;
-      border: 1px solid rgba(96, 165, 250, 0.26);
-      background: rgba(7, 16, 30, 0.92);
-      color: var(--text);
-      outline: none;
-      box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.02);
-    }}
-
-    textarea {{
-      min-height: 88px;
-      resize: vertical;
-      font: inherit;
-      line-height: 1.45;
-    }}
-
-    input[type="search"]:focus,
-    textarea:focus {{
-      border-color: rgba(34, 211, 238, 0.6);
-      box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.12);
-    }}
-
-    button {{
-      border: 1px solid rgba(34, 211, 238, 0.28);
-      background:
-        linear-gradient(180deg, rgba(14, 116, 144, 0.82), rgba(8, 47, 73, 0.94));
-      color: var(--text);
-      padding: 11px 14px;
-      border-radius: 14px;
-      cursor: pointer;
-      font: inherit;
-      transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
-      box-shadow: 0 8px 24px rgba(8, 47, 73, 0.32);
-    }}
-
-    button:hover {{
-      transform: translateY(-1px);
-      border-color: rgba(103, 232, 249, 0.54);
-      box-shadow: 0 12px 28px rgba(14, 116, 144, 0.34);
-    }}
-
-    button.secondary {{
-      background:
-        linear-gradient(180deg, rgba(49, 46, 129, 0.82), rgba(30, 27, 75, 0.94));
-      border-color: rgba(167, 139, 250, 0.26);
-    }}
-
-    .button-row {{
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 12px;
-    }}
-
-    .legend {{
-      display: grid;
-      gap: 10px;
-      margin-top: 12px;
-    }}
-
-    .legend span {{
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--accent);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .stat-card span {
+      font-size: 0.62rem;
       color: var(--muted);
-    }}
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
 
-    .dot {{
-      width: 12px;
-      height: 12px;
-      border-radius: 999px;
+    /* ─── Section labels ─── */
+    .section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 12px 0 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .section-label::before {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .section-label .caret {
+      transition: transform 200ms ease;
+      font-style: normal;
+      color: var(--dim);
+    }
+    .section-label.collapsed .caret { transform: rotate(-90deg); }
+
+    /* ─── Search ─── */
+    .search-wrap {
+      position: relative;
+    }
+    .search-wrap .icon {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 0.85rem;
+      pointer-events: none;
+      font-style: normal;
+    }
+    input[type="search"],
+    input[type="text"] {
+      width: 100%;
+      padding: 10px 12px 10px 32px;
+      border-radius: var(--r-sm);
+      border: 1px solid var(--border);
+      background: rgba(0, 245, 212, 0.04);
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      outline: none;
+      transition: border-color 150ms, box-shadow 150ms;
+    }
+    input[type="search"]:focus,
+    input[type="text"]:focus {
+      border-color: var(--border-hi);
+      box-shadow: 0 0 0 3px rgba(0, 245, 212, 0.08);
+    }
+    input[type="search"]::-webkit-search-cancel-button { display: none; }
+
+    .node-counter {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--dim);
+      text-align: right;
+      padding: 3px 2px;
+      transition: color 200ms;
+    }
+    .node-counter.active { color: var(--accent); }
+
+    /* ─── Filter groups ─── */
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      overflow-y: auto;
+      transition: max-height 250ms ease;
+    }
+    .filter-group.collapsed { max-height: 0 !important; }
+
+    .filter-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 10px;
+      border-radius: var(--r-sm);
+      background: rgba(255,255,255,0.02);
+      border: 1px solid transparent;
+      transition: border-color 150ms, background 150ms;
+    }
+    .filter-row:hover {
+      border-color: var(--border);
+      background: rgba(0, 245, 212, 0.03);
+    }
+    .filter-row label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text);
+      font-size: 0.82rem;
+      cursor: pointer;
+      flex: 1;
+    }
+    .filter-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
       display: inline-block;
-      box-shadow: 0 0 12px currentColor;
-    }}
+    }
 
-    .workspace {{
+    /* Toggle switch */
+    .toggle-wrap { position: relative; }
+    .toggle-wrap input[type="checkbox"] { display: none; }
+    .toggle-switch {
+      display: block;
+      width: 30px;
+      height: 16px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      position: relative;
+      transition: background 200ms, border-color 200ms;
+    }
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      left: 2px;
+      top: 2px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--dim);
+      transition: transform 200ms, background 200ms;
+    }
+    .toggle-wrap input:checked + .toggle-switch {
+      background: rgba(0, 245, 212, 0.2);
+      border-color: var(--accent);
+    }
+    .toggle-wrap input:checked + .toggle-switch::after {
+      transform: translateX(14px);
+      background: var(--accent);
+    }
+
+    /* ─── Workflow trace ─── */
+    .trace-input-wrap {
+      display: flex;
+      gap: 6px;
+    }
+    .trace-input-wrap input {
+      flex: 1;
+      padding-left: 12px;
+    }
+    .trace-hint {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--dim);
+      padding: 3px 2px 8px;
+    }
+
+    /* ─── Buttons ─── */
+    button {
+      font-family: 'Oxanium', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      border: 1px solid var(--border-hi);
+      background: rgba(0, 245, 212, 0.1);
+      color: var(--accent);
+      padding: 9px 14px;
+      border-radius: var(--r-sm);
+      cursor: pointer;
+      transition: background 150ms, box-shadow 150ms, transform 100ms;
+    }
+    button:hover {
+      background: rgba(0, 245, 212, 0.18);
+      box-shadow: 0 0 16px rgba(0, 245, 212, 0.18);
+      transform: translateY(-1px);
+    }
+    button:active { transform: translateY(0); }
+    button.secondary {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: var(--border);
+      color: var(--muted);
+    }
+    button.secondary:hover {
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: none;
+      color: var(--text);
+    }
+    button.icon-btn {
+      padding: 8px 10px;
+      font-size: 1rem;
+      line-height: 1;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    /* ─── Workflow status ─── */
+    .status-bar {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--muted);
+      padding: 8px 10px;
+      border-radius: var(--r-sm);
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+      line-height: 1.4;
+    }
+    .status-bar strong { color: var(--accent); font-weight: 500; }
+
+    /* ─── Legend ─── */
+    .legend-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      padding: 5px 8px;
+      border-radius: var(--r-sm);
+      background: rgba(255,255,255,0.02);
+    }
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      box-shadow: 0 0 8px currentColor;
+    }
+
+    /* ─── Canvas ─── */
+    .workspace {
       position: relative;
       overflow: hidden;
       min-height: 100vh;
-    }}
-
-    .workspace::before {{
+      z-index: 1;
+    }
+    .workspace::before {
       content: "";
       position: absolute;
       inset: 0;
-      background:
-        radial-gradient(circle at center, rgba(34, 211, 238, 0.06), transparent 38%);
+      background: radial-gradient(ellipse at 50% 40%, rgba(0, 245, 212, 0.04), transparent 55%);
       pointer-events: none;
-    }}
-
-    svg {{
+    }
+    svg {
       position: relative;
       z-index: 1;
       width: 100%;
@@ -505,187 +650,353 @@ def render_html(graph: Dict[str, object], title: str) -> str:
       display: block;
       cursor: grab;
       touch-action: none;
-    }}
+    }
+    svg.dragging { cursor: grabbing; }
 
-    svg.dragging {{
-      cursor: grabbing;
-    }}
+    /* ─── Zoom controls ─── */
+    .zoom-controls {
+      position: absolute;
+      bottom: 24px;
+      left: 20px;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .zoom-controls button {
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      border-radius: var(--r-sm);
+      backdrop-filter: blur(12px);
+      background: rgba(4, 10, 22, 0.82);
+    }
 
-    .help {{
+    /* ─── Canvas counter ─── */
+    .canvas-counter {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      z-index: 10;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--muted);
+      background: rgba(4, 10, 22, 0.8);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      padding: 5px 10px;
+      backdrop-filter: blur(8px);
+      letter-spacing: 0.08em;
+    }
+    .canvas-counter .hi { color: var(--accent); }
+
+    /* ─── Help tooltip ─── */
+    .help {
       position: absolute;
       right: 18px;
       bottom: 18px;
-      z-index: 2;
-      padding: 12px 14px;
-      border-radius: 14px;
-      background: rgba(5, 12, 22, 0.8);
+      z-index: 10;
+      padding: 10px 14px;
+      border-radius: var(--r-sm);
+      background: rgba(4, 10, 22, 0.88);
       border: 1px solid var(--border);
       color: var(--muted);
-      max-width: 360px;
-      font-size: 0.9rem;
-      backdrop-filter: blur(14px);
-    }}
+      font-size: 0.72rem;
+      font-family: 'JetBrains Mono', monospace;
+      backdrop-filter: blur(12px);
+      line-height: 1.6;
+      animation: fadeHelp 5s ease forwards;
+      animation-delay: 3s;
+    }
+    @keyframes fadeHelp {
+      to { opacity: 0; pointer-events: none; }
+    }
 
-    .details-title {{
-      font-size: 1.12rem;
-      margin-bottom: 8px;
+    /* ─── Right panel ─── */
+    .inspector-title {
+      font-size: 1rem;
+      font-weight: 600;
       color: var(--text);
-    }}
-
-    .meta {{
-      padding: 12px;
-      border-radius: 14px;
-      background: rgba(7, 16, 30, 0.78);
-      border: 1px solid rgba(96, 165, 250, 0.14);
-      margin-top: 12px;
-    }}
-
-    .meta strong {{
-      color: var(--text);
-    }}
-
-    .node-list {{
-      margin-top: 12px;
-      padding-left: 18px;
-    }}
-
-    .node-list li {{
-      margin-bottom: 8px;
-    }}
-
-    .empty {{
+      margin-bottom: 4px;
+    }
+    .inspector-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
       color: var(--muted);
-      font-style: italic;
-    }}
+      margin-bottom: 12px;
+    }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 7px 10px;
+      border-radius: var(--r-sm);
+      background: rgba(255,255,255,0.025);
+      border: 1px solid var(--border);
+      margin-bottom: 5px;
+      font-size: 0.78rem;
+    }
+    .meta-row .label { color: var(--muted); }
+    .meta-row .value { color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; }
 
-    .status {{
-      margin-top: 10px;
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(96, 165, 250, 0.16);
-      background: rgba(7, 16, 30, 0.72);
-      color: var(--muted);
-      font-size: 0.9rem;
-    }}
-
-    .status strong {{
-      color: var(--text);
-    }}
-
-    .step-list {{
+    .neighbor-list {
       list-style: none;
-      padding: 0;
-      margin: 12px 0 0;
-      display: grid;
-      gap: 10px;
-    }}
-
-    .step-list li {{
-      padding: 10px 12px;
-      border-radius: 12px;
-      background: rgba(7, 16, 30, 0.78);
-      border: 1px solid rgba(96, 165, 250, 0.14);
-    }}
-
-    .step-list small {{
-      display: block;
-      margin-top: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 8px;
+    }
+    .neighbor-list li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 10px;
+      border-radius: var(--r-sm);
+      background: rgba(255,255,255,0.02);
+      border: 1px solid transparent;
+      font-size: 0.78rem;
+      transition: border-color 150ms;
+    }
+    .neighbor-list li:hover { border-color: var(--border); }
+    .neighbor-list .n-label { color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 0.73rem; }
+    .neighbor-list .n-kind {
+      font-size: 0.62rem;
       color: var(--muted);
-    }}
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.06em;
+    }
 
-    .signal {{
-      color: var(--warning);
-    }}
+    /* Hotspot cards */
+    .hotspot-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: var(--r-sm);
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      margin-bottom: 5px;
+      cursor: pointer;
+      transition: border-color 150ms, background 150ms;
+    }
+    .hotspot-card:hover {
+      border-color: var(--border-hi);
+      background: var(--accent-dim);
+    }
+    .hotspot-rank {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--dim);
+      width: 16px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .hotspot-info { flex: 1; min-width: 0; }
+    .hotspot-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .hotspot-meta { font-size: 0.65rem; color: var(--muted); margin-top: 1px; }
+    .hotspot-degree {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
 
-    @media (max-width: 1220px) {{
-      body {{
-        grid-template-columns: 1fr;
-      }}
+    /* ─── Step list ─── */
+    .step-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-top: 8px;
+    }
+    .step-list li {
+      padding: 8px 10px;
+      border-radius: var(--r-sm);
+      background: rgba(255, 190, 11, 0.04);
+      border: 1px solid rgba(255, 190, 11, 0.12);
+      font-size: 0.78rem;
+    }
+    .step-list li strong { color: var(--amber); display: block; margin-bottom: 2px; }
+    .step-list li small { color: var(--muted); font-size: 0.72rem; line-height: 1.4; display: block; font-family: 'JetBrains Mono', monospace; }
 
-      .panel, .panel.right {{
-        border: none;
-        max-height: none;
-      }}
+    .empty {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--dim);
+      font-style: italic;
+      line-height: 1.5;
+      padding: 8px 0;
+    }
 
-      svg {{
-        height: 72vh;
-      }}
-    }}
+    @media (max-width: 1100px) {
+      body { grid-template-columns: 1fr; }
+      .panel, .panel.right { border: none; max-height: none; }
+      svg { height: 70vh; }
+    }
+    @keyframes flowPulse {
+      from { stroke-dashoffset: 24; }
+      to { stroke-dashoffset: 0; }
+    }
+    .flow-trace {
+      animation: flowPulse 0.6s linear infinite;
+    }
   </style>
 </head>
 <body>
+  <!-- LEFT PANEL -->
   <aside class="panel">
-    <div class="eyebrow">Interactive Code Surface</div>
-    <h1>__TITLE__</h1>
-    <p>This graph is generated from your Python files. Select a node to spotlight its local neighborhood, trigger a pulse across the graph, or trace how a particular input would travel through your code.</p>
+    <div class="brand">
+      <div class="brand-eyebrow">Interactive Code Surface</div>
+      <div class="brand-title">agent_desk<span>·</span>DD</div>
+    </div>
 
     <div class="stats" id="stats"></div>
 
-    <h2>Filters</h2>
-    <div class="section-box">
-      <input id="search" type="search" placeholder="Search files, functions, imports">
-      <div class="filters" style="margin-top: 12px;">
-        <label><input type="checkbox" id="modules" checked> Show modules</label>
-        <label><input type="checkbox" id="functions" checked> Show functions</label>
-        <label><input type="checkbox" id="externals" checked> Show external deps</label>
-        <label><input type="checkbox" id="symbols" checked> Show call symbols</label>
-        <label><input type="checkbox" id="imports" checked> Show import edges</label>
-        <label><input type="checkbox" id="calls" checked> Show call edges</label>
-        <label><input type="checkbox" id="defines" checked> Show defines edges</label>
+    <!-- Search -->
+    <div class="section-label">Search</div>
+    <div class="search-wrap">
+      <i class="icon">⌕</i>
+      <input id="search" type="search" placeholder="files, functions, imports…">
+    </div>
+    <div class="node-counter" id="nodeCounter">— nodes · — edges</div>
+
+    <!-- Node type filters -->
+    <div class="section-label" data-target="filterNodes">
+      Node types <i class="caret">▾</i>
+    </div>
+    <div class="filter-group" id="filterNodes" style="max-height: 500vh;">
+      <div class="filter-row">
+        <label for="modules">
+          <span class="filter-dot" style="background:var(--module)"></span>Modules
+        </label>
+        <div class="toggle-wrap"><input type="checkbox" id="modules" checked><label class="toggle-switch" for="modules"></label></div>
+      </div>
+      <div class="filter-row">
+        <label for="functions">
+          <span class="filter-dot" style="background:var(--function)"></span>Functions
+        </label>
+        <div class="toggle-wrap"><input type="checkbox" id="functions" checked><label class="toggle-switch" for="functions"></label></div>
+      </div>
+      <div class="filter-row">
+        <label for="externals">
+          <span class="filter-dot" style="background:var(--external)"></span>External deps
+        </label>
+        <div class="toggle-wrap"><input type="checkbox" id="externals" checked><label class="toggle-switch" for="externals"></label></div>
+      </div>
+      <div class="filter-row">
+        <label for="symbols">
+          <span class="filter-dot" style="background:var(--symbol)"></span>Call symbols
+        </label>
+        <div class="toggle-wrap"><input type="checkbox" id="symbols" checked><label class="toggle-switch" for="symbols"></label></div>
       </div>
     </div>
 
-    <h2>Workflow Trace</h2>
-    <div class="section-box">
-      <p>Type an example user input to map the likely runtime path through your codebase.</p>
-      <textarea id="workflowInput" placeholder="Example: type hello in np"></textarea>
-      <div class="button-row">
-        <button id="traceWorkflow">Trace Workflow</button>
-        <button id="clearWorkflow" class="secondary">Clear Trace</button>
+    <!-- Edge type filters -->
+    <div class="section-label" data-target="filterEdges">
+      Edge types <i class="caret">▾</i>
+    </div>
+    <div class="filter-group" id="filterEdges" style="max-height: 500vh;">
+      <div class="filter-row">
+        <label for="imports"><span class="filter-dot" style="background:var(--module)"></span>Imports</label>
+        <div class="toggle-wrap"><input type="checkbox" id="imports" checked><label class="toggle-switch" for="imports"></label></div>
       </div>
-      <div class="status" id="workflowStatus">
-        <strong>Ready:</strong> waiting for an input trace.
+      <div class="filter-row">
+        <label for="calls"><span class="filter-dot" style="background:var(--amber)"></span>Calls</label>
+        <div class="toggle-wrap"><input type="checkbox" id="calls" checked><label class="toggle-switch" for="calls"></label></div>
+      </div>
+      <div class="filter-row">
+        <label for="defines"><span class="filter-dot" style="background:var(--symbol)"></span>Defines</label>
+        <div class="toggle-wrap"><input type="checkbox" id="defines" checked><label class="toggle-switch" for="defines"></label></div>
       </div>
     </div>
 
-    <h2>Legend</h2>
-    <div class="section-box">
-      <div class="legend">
-        <span><i class="dot" style="background: var(--module)"></i> Module</span>
-        <span><i class="dot" style="background: var(--function)"></i> Function</span>
-        <span><i class="dot" style="background: var(--external)"></i> External import</span>
-        <span><i class="dot" style="background: var(--symbol)"></i> Referenced callable</span>
-        <span><i class="dot" style="background: var(--neighbor)"></i> Selected neighbor</span>
-        <span><i class="dot" style="background: var(--trace)"></i> Workflow trace</span>
-      </div>
+    <!-- Workflow trace -->
+    <div class="section-label">Workflow Trace</div>
+    <div class="trace-hint">Trace an example input through the runtime pipeline.</div>
+    <div class="trace-input-wrap">
+      <input id="workflowInput" type="text" placeholder="e.g. type hello in np">
+      <button id="traceWorkflow" title="Run trace">▶</button>
+    </div>
+    <div class="status-bar" id="workflowStatus" style="margin-top:8px;">
+      <strong>ready</strong> — waiting for input
+    </div>
+    <div style="margin-top:6px;">
+      <button id="clearWorkflow" class="secondary" style="font-size:0.75rem;padding:7px 12px;">Clear Trace</button>
+    </div>
+
+    <!-- Legend -->
+    <div class="section-label">Legend</div>
+    <div class="legend-grid">
+      <div class="legend-item"><span class="dot" style="background:var(--module);color:var(--module)"></span>Module</div>
+      <div class="legend-item"><span class="dot" style="background:var(--function);color:var(--function)"></span>Function</div>
+      <div class="legend-item"><span class="dot" style="background:var(--external);color:var(--external)"></span>External</div>
+      <div class="legend-item"><span class="dot" style="background:var(--symbol);color:var(--symbol)"></span>Symbol</div>
+      <div class="legend-item"><span class="dot" style="background:var(--neighbor);color:var(--neighbor)"></span>Neighbor</div>
+      <div class="legend-item"><span class="dot" style="background:var(--trace);color:var(--trace)"></span>Trace</div>
     </div>
   </aside>
 
+  <!-- CENTER: Graph canvas -->
   <main class="workspace">
     <svg id="graph" viewBox="0 0 1400 900" aria-label="Codebase graph">
+      <defs>
+        <marker id="arrow-trace" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="rgba(255,190,11,0.95)" />
+        </marker>
+        <marker id="arrow-selected" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="rgba(103,232,249,0.95)" />
+        </marker>
+      </defs>
       <g id="viewport">
         <g id="links"></g>
         <g id="nodes"></g>
       </g>
     </svg>
-    <div class="help">
-      Scroll to zoom. Drag the background to pan. Click a node to select it, highlight neighbors, and send a pulse through the graph.
+    <div class="canvas-counter" id="canvasCounter">
+      <span class="hi" id="visNodeCount">—</span> nodes · <span class="hi" id="visEdgeCount">—</span> edges
+    </div>
+    <div class="zoom-controls">
+      <button class="icon-btn" id="zoomIn" title="Zoom in">+</button>
+      <button class="icon-btn" id="zoomFit" title="Fit to screen" style="font-size:0.75rem;">⊡</button>
+      <button class="icon-btn" id="zoomOut" title="Zoom out">−</button>
+    </div>
+    <div class="help" id="helpTip">
+      Scroll → zoom · Drag bg → pan<br>Click node → inspect · Drag node → reposition
     </div>
   </main>
 
+  <!-- RIGHT PANEL: Inspector -->
   <aside class="panel right">
-    <h2>Inspector</h2>
+    <div class="section-label" style="padding-top:4px;">Inspector</div>
     <div id="inspector">
-      <p class="empty">Select a node to inspect its details and direct neighbors.</p>
+      <div class="empty">Select a node to inspect it.</div>
     </div>
-    <h2>Trace Steps</h2>
+
+    <div class="section-label" style="margin-top:8px;">Hot Spots</div>
+    <div id="hotspots"></div>
+
+    <div class="section-label" style="margin-top:8px;">Trace Steps</div>
     <div id="workflowSteps">
-      <p class="empty">Run a workflow trace to see the probable execution path for an example input.</p>
+      <div class="empty">Run a workflow trace to see the execution path.</div>
     </div>
   </aside>
 
   <script>
+    // ─── Graph Data ───────────────────────────────────────────────────────────
     const graph = __GRAPH_JSON__;
+
+    // ─── DOM refs ─────────────────────────────────────────────────────────────
     const svg = document.getElementById("graph");
     const viewport = document.getElementById("viewport");
     const linksLayer = document.getElementById("links");
@@ -698,14 +1009,14 @@ def render_html(graph: Dict[str, object], title: str) -> str:
     const traceWorkflowButton = document.getElementById("traceWorkflow");
     const clearWorkflowButton = document.getElementById("clearWorkflow");
 
-    const typeColor = {{
+    const typeColor = {
       module: getComputedStyle(document.documentElement).getPropertyValue("--module").trim(),
       function: getComputedStyle(document.documentElement).getPropertyValue("--function").trim(),
       external: getComputedStyle(document.documentElement).getPropertyValue("--external").trim(),
       symbol: getComputedStyle(document.documentElement).getPropertyValue("--symbol").trim(),
-    }};
+    };
 
-    const filters = {{
+    const filters = {
       module: document.getElementById("modules"),
       function: document.getElementById("functions"),
       external: document.getElementById("externals"),
@@ -713,38 +1024,38 @@ def render_html(graph: Dict[str, object], title: str) -> str:
       imports: document.getElementById("imports"),
       calls: document.getElementById("calls"),
       defines: document.getElementById("defines"),
-    }};
+    };
 
+    // Stats
     document.getElementById("stats").innerHTML = `
-      <div class="card"><strong>${{graph.summary.module_count}}</strong>Modules</div>
-      <div class="card"><strong>${{graph.summary.function_count}}</strong>Functions</div>
-      <div class="card"><strong>${{graph.summary.external_count}}</strong>External</div>
-      <div class="card"><strong>${{graph.summary.link_count}}</strong>Edges</div>
+      <div class="stat-card"><strong>${graph.summary.module_count}</strong><span>modules</span></div>
+      <div class="stat-card"><strong>${graph.summary.function_count}</strong><span>funcs</span></div>
+      <div class="stat-card"><strong>${graph.summary.external_count}</strong><span>ext</span></div>
+      <div class="stat-card"><strong>${graph.summary.link_count}</strong><span>edges</span></div>
     `;
 
-    const nodes = graph.nodes.map((node, index) => ({{
+    const nodes = graph.nodes.map((node, index) => ({
       ...node,
       x: 180 + (index % 6) * 180 + Math.random() * 40,
       y: 140 + Math.floor(index / 6) * 120 + Math.random() * 40,
       vx: 0,
       vy: 0,
       radius: node.kind === "module" ? 28 : node.kind === "function" ? 18 : 14,
-    }}));
+    }));
 
     const nodeMap = new Map(nodes.map(node => [node.id, node]));
-
-    const links = graph.links.map(link => ({{
+    const links = graph.links.map(link => ({
       ...link,
       sourceNode: nodeMap.get(link.source),
       targetNode: nodeMap.get(link.target),
-    }}));
+    }));
 
     const adjacency = new Map();
     nodes.forEach(node => adjacency.set(node.id, new Set()));
-    links.forEach(link => {{
+    links.forEach(link => {
       adjacency.get(link.source)?.add(link.target);
       adjacency.get(link.target)?.add(link.source);
-    }});
+    });
 
     let selectedNode = null;
     let draggedNode = null;
@@ -754,15 +1065,26 @@ def render_html(graph: Dict[str, object], title: str) -> str:
     let workflowTraceEdgeSet = new Set();
     let workflowTraceStepsData = [];
     let activePulse = null;
+    let traceStartedAt = null;
     let currentScale = 1;
     let panX = 0;
     let panY = 0;
     let isPanning = false;
-    let startPan = {{ x: 0, y: 0 }};
     let backgroundPointerMoved = false;
+    let startPan = { x: 0, y: 0 };
     let pointerState = null;
 
-    const actionFunctionMap = {{
+    // ─── Collapsible sections ──────────────────────────────────────────────────
+    document.querySelectorAll('.section-label[data-target]').forEach(label => {
+      const target = document.getElementById(label.dataset.target);
+      label.addEventListener('click', () => {
+        const collapsed = label.classList.toggle('collapsed');
+        target.classList.toggle('collapsed', collapsed);
+      });
+    });
+
+    // ─── Action map ───────────────────────────────────────────────────────────
+    const actionFunctionMap = {
       open: "function:actions.open_app",
       type: "function:actions.type_text",
       search: "function:actions.search_web",
@@ -771,311 +1093,286 @@ def render_html(graph: Dict[str, object], title: str) -> str:
       enter: "function:actions.press_enter",
       del: "function:actions.backspace",
       focus: "function:actions.focus_search",
-    }};
+    };
 
-    const stopwords = new Set(["i", "want", "to", "wish", "would", "like", "please", "me", "can", "you", "could", "in", "on", "at", "from", "the", "a", "an"]);
-    const questionPatterns = ["what is", "what are", "how to", "who is", "where is", "why is"];
-    const primitiveActions = new Set(["open", "wait", "enter", "del", "focus"]);
-    const platformTokens = new Set(["youtube", "yt", "google", "notepad", "notes", "np", "ggl", "xl", "word"]);
+    const stopwords = new Set(["i","want","to","wish","would","like","please","me","can","you","could","in","on","at","from","the","a","an"]);
+    const questionPatterns = ["what is","what are","how to","who is","where is","why is"];
+    const primitiveActions = new Set(["open","wait","enter","del","focus"]);
+    const platformTokens = new Set(["youtube","yt","google","notepad","notes","np","ggl","xl","word"]);
 
-    function linkKey(source, target) {{
-      return `${{source}}=>${{target}}`;
-    }}
+    function linkKey(source, target) { return `${source}=>${target}`; }
 
-    function visibleKinds() {{
+    function visibleKinds() {
       return new Set(
         Object.entries(filters)
-          .filter(([key, input]) => ["imports", "calls", "defines"].includes(key) ? false : input.checked)
+          .filter(([key, input]) => ["imports","calls","defines"].includes(key) ? false : input.checked)
           .map(([key]) => key)
       );
-    }}
+    }
 
-    function matchesSearch(node) {{
+    function matchesSearch(node) {
       const term = searchInput.value.trim().toLowerCase();
-      if (!term) {{
-        return true;
-      }}
+      if (!term) return true;
       return [node.label, node.path, node.details].join(" ").toLowerCase().includes(term);
-    }}
+    }
 
-    function isNodeVisible(node) {{
-      return visibleKinds().has(node.kind) && matchesSearch(node);
-    }}
+    function isNodeVisible(node) { return visibleKinds().has(node.kind) && matchesSearch(node); }
 
-    function isLinkVisible(link) {{
+    function isLinkVisible(link) {
       const edgeToggle = filters[link.type];
       return edgeToggle.checked && isNodeVisible(link.sourceNode) && isNodeVisible(link.targetNode);
-    }}
+    }
 
-    function neighborsOf(nodeId) {{
+    function neighborsOf(nodeId) {
       return [...(adjacency.get(nodeId) || [])].map(id => nodeMap.get(id)).filter(Boolean);
-    }}
+    }
 
-    function computeDistances(originId) {{
+    function computeDistances(originId) {
       const distances = new Map([[originId, 0]]);
       const queue = [originId];
-      while (queue.length) {{
+      while (queue.length) {
         const current = queue.shift();
         const currentDistance = distances.get(current);
-        for (const neighbor of adjacency.get(current) || []) {{
-          if (!distances.has(neighbor)) {{
+        for (const neighbor of adjacency.get(current) || []) {
+          if (!distances.has(neighbor)) {
             distances.set(neighbor, currentDistance + 1);
             queue.push(neighbor);
-          }}
-        }}
-      }}
+          }
+        }
+      }
       return distances;
-    }}
+    }
 
-    function selectNode(node) {{
+    // ─── Hotspots (top connected nodes) ───────────────────────────────────────
+    function renderHotspots() {
+      const sorted = [...nodes]
+        .map(n => ({ node: n, degree: (adjacency.get(n.id) || new Set()).size }))
+        .sort((a, b) => b.degree - a.degree)
+        .slice(0, 5);
+
+      const kindColors = { module: 'var(--module)', function: 'var(--function)', external: 'var(--external)', symbol: 'var(--symbol)' };
+      document.getElementById('hotspots').innerHTML = sorted.map((item, i) => `
+        <div class="hotspot-card" data-node-id="${item.node.id}">
+          <div class="hotspot-rank">${i + 1}</div>
+          <div class="hotspot-info">
+            <div class="hotspot-name">${item.node.label}</div>
+            <div class="hotspot-meta" style="color:${kindColors[item.node.kind] || 'var(--muted)'}">${item.node.kind}</div>
+          </div>
+          <div class="hotspot-degree">${item.degree}</div>
+        </div>
+      `).join('');
+
+      document.querySelectorAll('.hotspot-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const node = nodeMap.get(card.dataset.nodeId);
+          if (node) selectNode(node);
+        });
+      });
+    }
+    renderHotspots();
+
+    // ─── Update visible counts ─────────────────────────────────────────────────
+    function updateCounters() {
+      const vn = nodes.filter(isNodeVisible).length;
+      const ve = links.filter(isLinkVisible).length;
+      document.getElementById('visNodeCount').textContent = vn;
+      document.getElementById('visEdgeCount').textContent = ve;
+      const nc = document.getElementById('nodeCounter');
+      nc.textContent = `${vn} nodes · ${ve} edges visible`;
+      nc.classList.toggle('active', vn < nodes.length);
+    }
+
+    function selectNode(node) {
       selectedNode = node;
       selectionNeighbors = new Set(neighborsOf(node.id).map(item => item.id));
-      activePulse = {{
+      activePulse = {
         originId: node.id,
         startedAt: performance.now(),
         distances: computeDistances(node.id),
-      }};
+      };
       renderInspector(node);
       render();
-    }}
+    }
 
-    function clearSelection() {{
+    function clearSelection() {
       selectedNode = null;
       selectionNeighbors = new Set();
       activePulse = null;
       renderInspector(null);
       render();
-    }}
+    }
 
-    function isSelectedOrNeighbor(node) {{
-      if (!selectedNode) {{
-        return false;
-      }}
+    function isSelectedOrNeighbor(node) {
+      if (!selectedNode) return false;
       return node.id === selectedNode.id || selectionNeighbors.has(node.id);
-    }}
+    }
 
-    function hasWorkflowTrace() {{
-      return workflowTraceNodeIds.length > 0;
-    }}
+    function hasWorkflowTrace() { return workflowTraceNodeIds.length > 0; }
 
-    function nodePulseState(node, now) {{
-      if (!activePulse || !activePulse.distances.has(node.id)) {{
-        return null;
-      }}
+    function nodePulseState(node, now) {
+      if (!activePulse || !activePulse.distances.has(node.id)) return null;
       const delay = activePulse.distances.get(node.id) * 150;
       const elapsed = now - activePulse.startedAt - delay;
-      if (elapsed < 0 || elapsed > 1100) {{
-        return null;
-      }}
+      if (elapsed < 0 || elapsed > 1100) return null;
       const progress = elapsed / 1100;
-      return {{
-        radius: node.radius + progress * 42,
-        opacity: 0.7 * (1 - progress),
-      }};
-    }}
+      return { radius: node.radius + progress * 42, opacity: 0.7 * (1 - progress) };
+    }
 
-    function edgePulseState(link, now) {{
-      if (!activePulse) {{
-        return null;
-      }}
+    function edgePulseState(link, now) {
+      if (!activePulse) return null;
       const sourceDistance = activePulse.distances.get(link.source);
       const targetDistance = activePulse.distances.get(link.target);
-      if (sourceDistance == null || targetDistance == null) {{
-        return null;
-      }}
+      if (sourceDistance == null || targetDistance == null) return null;
       const delay = Math.min(sourceDistance, targetDistance) * 150;
       const elapsed = now - activePulse.startedAt - delay;
-      if (elapsed < 0 || elapsed > 850) {{
-        return null;
-      }}
+      if (elapsed < 0 || elapsed > 850) return null;
       return 0.5 * (1 - elapsed / 850);
-    }}
+    }
 
-    function renderWorkflowTrace(steps) {{
-      if (!steps.length) {{
-        workflowSteps.innerHTML = '<p class="empty">Run a workflow trace to see the probable execution path for an example input.</p>';
+    function edgeTravelProgress(link, now) {
+      if (!workflowTraceEdgeSet || !workflowTraceEdgeSet.size) return null;
+      const key = linkKey(link.source, link.target);
+      if (!workflowTraceEdgeSet.has(key)) return null;
+      const traceIndex = [...workflowTraceEdgeSet].indexOf(key);
+      const delay = traceIndex * 300;
+      const elapsed = now - traceStartedAt - delay;
+      if (elapsed < 0 || elapsed > 600) return null;
+      return elapsed / 600;
+    }
+
+
+    function renderWorkflowTrace(steps) {
+      if (!steps.length) {
+        workflowSteps.innerHTML = '<div class="empty">Run a workflow trace to see the execution path.</div>';
         return;
-      }}
-      workflowSteps.innerHTML = `
-        <ul class="step-list">
-          ${steps.map(step => `
-            <li>
-              <strong>${step.title}</strong>
-              <small>${step.detail}</small>
-            </li>
-          `).join("")}
-        </ul>
-      `;
-    }}
+      }
+      workflowSteps.innerHTML = `<ul class="step-list">${steps.map(step => `
+        <li><strong>${step.title}</strong><small>${step.detail}</small></li>
+      `).join("")}</ul>`;
+    }
 
-    function setWorkflowTrace(nodeIds, steps, statusText) {{
+    function setWorkflowTrace(nodeIds, steps, statusText) {
       const filteredIds = nodeIds.filter(id => nodeMap.has(id));
       workflowTraceNodeIds = filteredIds;
       workflowTraceNodeSet = new Set(filteredIds);
       workflowTraceEdgeSet = new Set();
-      for (let i = 0; i < filteredIds.length - 1; i += 1) {{
+      for (let i = 0; i < filteredIds.length - 1; i += 1) {
         workflowTraceEdgeSet.add(linkKey(filteredIds[i], filteredIds[i + 1]));
         workflowTraceEdgeSet.add(linkKey(filteredIds[i + 1], filteredIds[i]));
-      }}
+      }
       workflowTraceStepsData = steps;
-      workflowStatus.innerHTML = `<strong>Trace:</strong> ${statusText}`;
+      workflowStatus.innerHTML = `<strong>trace</strong> — ${statusText}`;
       renderWorkflowTrace(steps);
+      traceStartedAt = performance.now();
       render();
-    }}
+    }
 
-    function clearWorkflowTrace() {{
+    function clearWorkflowTrace() {
       workflowTraceNodeIds = [];
       workflowTraceNodeSet = new Set();
       workflowTraceEdgeSet = new Set();
       workflowTraceStepsData = [];
-      workflowStatus.innerHTML = '<strong>Ready:</strong> waiting for an input trace.';
+      workflowStatus.innerHTML = '<strong>ready</strong> — waiting for input';
       renderWorkflowTrace([]);
       render();
-    }}
+    }
 
-    function splitChunks(text) {{
-      return text
-        .toLowerCase()
-        .split(/\\b(?:and then|after that|then|and)\\b/g)
-        .map(part => part.trim())
-        .filter(Boolean);
-    }}
+    function splitChunks(text) {
+      return text.toLowerCase()
+        .split(/\b(?:and then|after that|then|and)\b/g)
+        .map(part => part.trim()).filter(Boolean);
+    }
 
-    function inferActionsForChunk(chunk) {{
-      const words = chunk.split(/\\s+/).filter(Boolean);
-      if (!words.length) {{
-        return [];
-      }}
-      if (primitiveActions.has(words[0])) {{
-        return [words[0]];
-      }}
-      if (questionPatterns.some(pattern => chunk.startsWith(pattern))) {{
-        return ["search"];
-      }}
+    function inferActionsForChunk(chunk) {
+      const words = chunk.split(/\s+/).filter(Boolean);
+      if (!words.length) return [];
+      if (primitiveActions.has(words[0])) return [words[0]];
+      if (questionPatterns.some(pattern => chunk.startsWith(pattern))) return ["search"];
       let cleanWords = words.filter(word => !stopwords.has(word));
-      const noiseIndex = cleanWords.findIndex(word => ["while", "when", "whilst", "during"].includes(word));
-      if (noiseIndex >= 0) {{
-        cleanWords = cleanWords.slice(0, noiseIndex);
-      }}
+      const noiseIndex = cleanWords.findIndex(word => ["while","when","whilst","during"].includes(word));
+      if (noiseIndex >= 0) cleanWords = cleanWords.slice(0, noiseIndex);
       const platform = cleanWords.find(word => platformTokens.has(word));
-      const hasType = cleanWords.some(word => ["type", "write"].includes(word));
-      if (cleanWords.includes("open")) {{
-        return ["open"];
-      }}
-      if (cleanWords.some(word => ["search", "find"].includes(word))) {{
-        return ["search"];
-      }}
-      if (cleanWords.some(word => ["play", "watch", "listen"].includes(word))) {{
-        return ["play"];
-      }}
-      if (hasType) {{
-        return platform ? ["open", "type"] : ["type"];
-      }}
+      const hasType = cleanWords.some(word => ["type","write"].includes(word));
+      if (cleanWords.includes("open")) return ["open"];
+      if (cleanWords.some(word => ["search","find"].includes(word))) return ["search"];
+      if (cleanWords.some(word => ["play","watch","listen"].includes(word))) return ["play"];
+      if (hasType) return platform ? ["open","type"] : ["type"];
       return [];
-    }}
+    }
 
-    function traceWorkflowFromInput(text) {{
+    function traceWorkflowFromInput(text) {
       const trimmed = text.trim();
-      if (!trimmed) {{
+      if (!trimmed) {
         setWorkflowTrace([], [], "please enter an example input first.");
         return;
-      }}
-
+      }
       const chunks = splitChunks(trimmed);
       const steps = [];
       const nodeIds = [];
-      const uniquePush = id => {{
-        if (id && nodeMap.has(id) && !nodeIds.includes(id)) {{
-          nodeIds.push(id);
-        }}
-      }};
-
+      const uniquePush = id => {
+        if (id && nodeMap.has(id) && !nodeIds.includes(id)) nodeIds.push(id);
+      };
       uniquePush("module:main");
-      steps.push({{
-        title: "Input enters the main loop",
-        detail: "The command is read by the REPL in main.py and prepared for splitting.",
-      }});
-
-      chunks.forEach((chunk, index) => {{
+      steps.push({ title: "Input enters the main loop", detail: "The command is read by the REPL in main.py and prepared for splitting." });
+      chunks.forEach((chunk, index) => {
         uniquePush("function:intent.parse_intent");
-        steps.push({{
-          title: `Chunk ${index + 1}: parse intent`,
-          detail: `The chunk "${chunk}" is normalized and interpreted by intent.parse_intent().`,
-        }});
-
+        steps.push({ title: `Chunk ${index + 1}: parse intent`, detail: `The chunk "${chunk}" is normalized and interpreted by intent.parse_intent().` });
         const actions = inferActionsForChunk(chunk);
         uniquePush("function:main.action_parser");
-        steps.push({{
+        steps.push({
           title: `Chunk ${index + 1}: dispatch`,
-          detail: actions.length
-            ? `main.action_parser() routes the parsed chunk to ${actions.join(" -> ")}.`
-            : "main.action_parser() handles fallback dispatch because no clear action pattern was inferred.",
-        }});
-
+          detail: actions.length ? `main.action_parser() routes to ${actions.join(" → ")}.` : "main.action_parser() handles fallback dispatch.",
+        });
         uniquePush("module:actions");
-        actions.forEach(action => {{
+        actions.forEach(action => {
           const targetId = actionFunctionMap[action];
           uniquePush(targetId);
-          steps.push({{
-            title: `Execute ${action}`,
-            detail: `The action registry resolves "${action}" to its concrete handler in actions.py.`,
-          }});
-        }});
-      }});
-
-      if (!nodeIds.length) {{
-        setWorkflowTrace([], [], "no traceable runtime path was found for that input.");
+          steps.push({ title: `Execute ${action}`, detail: `The action registry resolves "${action}" to its handler in actions.py.` });
+        });
+      });
+      if (!nodeIds.length) {
+        setWorkflowTrace([], [], "no traceable path found for that input.");
         return;
-      }}
-
-      setWorkflowTrace(
-        nodeIds,
-        steps,
-        `mapped ${chunks.length} input chunk${chunks.length === 1 ? "" : "s"} through the current runtime pipeline.`,
-      );
-
+      }
+      setWorkflowTrace(nodeIds, steps, `${chunks.length} chunk${chunks.length === 1 ? "" : "s"} mapped through the pipeline.`);
       const lastNode = nodeMap.get(nodeIds[nodeIds.length - 1]);
-      if (lastNode) {{
-        selectNode(lastNode);
-      }}
-    }}
+      if (lastNode) selectNode(lastNode);
+    }
 
-    function renderInspector(node) {{
-      if (!node) {{
-        inspector.innerHTML = '<p class="empty">Select a node to inspect its details and direct neighbors.</p>';
+    function renderInspector(node) {
+      if (!node) {
+        inspector.innerHTML = '<div class="empty">Select a node to inspect its details.</div>';
         return;
-      }}
-      const neighbors = neighborsOf(node.id)
-        .sort((a, b) => a.label.localeCompare(b.label))
-        .map(neighbor => `<li>${{neighbor.label}} <span style="color: var(--muted)">(${{
-          neighbor.kind
-        }})</span></li>`)
-        .join("");
+      }
+      const neighbors = neighborsOf(node.id).sort((a, b) => a.label.localeCompare(b.label));
+      const kindColor = { module: 'var(--module)', function: 'var(--function)', external: 'var(--external)', symbol: 'var(--symbol)' };
       inspector.innerHTML = `
-        <div class="details-title">${{node.label}}</div>
-        <p>${{node.details}}</p>
-        <div class="meta"><strong>Kind:</strong> ${{node.kind}}</div>
-        <div class="meta"><strong>Location:</strong> ${{node.path || "N/A"}}</div>
-        <div class="meta"><strong>Connected nodes:</strong> ${{neighborsOf(node.id).length}}</div>
-        <div class="meta"><strong>Neighbors:</strong></div>
-        ${
-          neighbors
-            ? `<ul class="node-list">${{neighbors}}</ul>`
-            : '<p class="empty">No direct neighbors in the current graph.</p>'
-        }
+        <div class="inspector-title">${node.label}</div>
+        <div class="inspector-sub">${node.details}</div>
+        <div class="meta-row"><span class="label">kind</span><span class="value" style="color:${kindColor[node.kind]}">${node.kind}</span></div>
+        <div class="meta-row"><span class="label">location</span><span class="value">${node.path || '—'}</span></div>
+        <div class="meta-row"><span class="label">connections</span><span class="value">${neighbors.length}</span></div>
+        ${neighbors.length ? `<ul class="neighbor-list">${neighbors.map(n => `
+          <li>
+            <span class="n-label">${n.label}</span>
+            <span class="n-kind" style="color:${kindColor[n.kind]}">${n.kind}</span>
+          </li>`).join('')}</ul>` : '<div class="empty" style="margin-top:6px;">No neighbors.</div>'}
       `;
-    }}
+    }
 
-    function updateViewportTransform() {{
-      viewport.setAttribute("transform", `translate(${{panX}} ${{panY}}) scale(${{currentScale}})`);
-    }}
+    function updateViewportTransform() {
+      viewport.setAttribute("transform", `translate(${panX} ${panY}) scale(${currentScale})`);
+    }
 
-    function render() {{
+    function render() {
       const now = performance.now();
       linksLayer.innerHTML = "";
       nodesLayer.innerHTML = "";
 
-      links.filter(isLinkVisible).forEach(link => {{
+      const visLinks = links.filter(isLinkVisible);
+      const visNodes = nodes.filter(isNodeVisible);
+
+      visLinks.forEach(link => {
         const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
         line.setAttribute("x1", link.sourceNode.x);
         line.setAttribute("y1", link.sourceNode.y);
@@ -1087,240 +1384,236 @@ def render_html(graph: Dict[str, object], title: str) -> str:
         );
         const tracedEdge = workflowTraceEdgeSet.has(linkKey(link.source, link.target));
         const pulse = edgePulseState(link, now);
-        let stroke = link.type === "calls" ? "rgba(245, 158, 11, 0.42)" : "rgba(103, 232, 249, 0.16)";
+        let stroke = link.type === "calls" ? "rgba(255,190,11,0.38)" : "rgba(0,245,212,0.13)";
         let strokeWidth = link.type === "defines" ? 1.4 : 1.8;
-        if (selectedEdge) {{
-          stroke = "rgba(103, 232, 249, 0.92)";
-          strokeWidth = 3;
-        }} else if (tracedEdge) {{
-          stroke = "rgba(245, 158, 11, 0.88)";
-          strokeWidth = 3;
-        }}
-        if (pulse) {{
-          stroke = `rgba(248, 250, 252, ${{Math.min(0.96, 0.34 + pulse)}})`;
-          strokeWidth = Math.max(strokeWidth, 2.4 + pulse * 4);
-        }}
-        if (selectedNode && !selectedEdge && !tracedEdge) {{
-          line.setAttribute("opacity", "0.24");
-        }}
+        if (selectedEdge) { stroke = "rgba(0,245,212,0.9)"; strokeWidth = 2.8; }
+        else if (tracedEdge) { stroke = "rgba(255,190,11,0.85)"; strokeWidth = 2.8; }
+        if (pulse) {
+          stroke = `rgba(255,255,255,${Math.min(0.95, 0.3 + pulse)})`;
+          strokeWidth = Math.max(strokeWidth, 2.2 + pulse * 4);
+        }
+        if (selectedNode && !selectedEdge && !tracedEdge) line.setAttribute("opacity", "0.18");
         line.setAttribute("stroke", stroke);
         line.setAttribute("stroke-width", strokeWidth);
-        line.setAttribute("stroke-dasharray", link.type === "imports" ? "6 6" : "0");
+        if (tracedEdge) {
+          line.setAttribute("stroke-dasharray", "10 4");
+          line.setAttribute("marker-end", "url(#arrow-trace)");
+          line.classList.add("flow-trace");
+        } else if (selectedEdge) {
+          line.setAttribute("stroke-dasharray", "0");
+          line.setAttribute("marker-end", "url(#arrow-selected)");
+        } else {
+          line.setAttribute("stroke-dasharray", link.type === "imports" ? "5 5" : "0");
+        }
         linksLayer.appendChild(line);
-      }});
+        const travelProgress = edgeTravelProgress(link, now);
+        if (travelProgress !== null) {
+          if (!link.sourceNode || !link.targetNode) return;
+          const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          const sx = link.sourceNode.x, sy = link.sourceNode.y;
+          const tx = link.targetNode.x, ty = link.targetNode.y;
+          const angle = Math.atan2(ty - sy, tx - sx) * 180 / Math.PI;
+          const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+          const cx = sx + (tx - sx) * travelProgress;
+          const cy = sy + (ty - sy) * travelProgress;
+          arrow.setAttribute("points", "0,-6 14,0 0,6");
+          arrow.setAttribute("fill", "rgba(255,190,11,0.95)");
+          arrow.setAttribute("transform", `translate(${cx},${cy}) rotate(${angle})`);
+          arrow.setAttribute("pointer-events", "none");
+          linksLayer.appendChild(arrow);
+        }
+      });
 
-      nodes.filter(isNodeVisible).forEach(node => {{
+      visNodes.forEach(node => {
         const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
         group.style.cursor = "pointer";
         group.dataset.nodeId = node.id;
         group.dataset.kind = node.kind;
 
         const pulseState = nodePulseState(node, now);
-        if (pulseState) {{
+        if (pulseState) {
           const pulseRing = document.createElementNS("http://www.w3.org/2000/svg", "circle");
           pulseRing.setAttribute("cx", node.x);
           pulseRing.setAttribute("cy", node.y);
           pulseRing.setAttribute("r", pulseState.radius);
           pulseRing.setAttribute("fill", "none");
-          pulseRing.setAttribute("stroke", "rgba(248, 250, 252, 0.9)");
-          pulseRing.setAttribute("stroke-width", "2");
+          pulseRing.setAttribute("stroke", "rgba(0,245,212,0.8)");
+          pulseRing.setAttribute("stroke-width", "1.5");
           pulseRing.setAttribute("stroke-opacity", pulseState.opacity);
           group.appendChild(pulseRing);
-        }}
+        }
 
         const selected = selectedNode && selectedNode.id === node.id;
         const neighbor = !selected && selectionNeighbors.has(node.id);
         const traced = workflowTraceNodeSet.has(node.id);
         const dimmed = selectedNode && !selected && !neighbor && !traced;
 
-        if (selected || neighbor || traced) {{
+        if (selected || neighbor || traced) {
           const halo = document.createElementNS("http://www.w3.org/2000/svg", "circle");
           halo.setAttribute("cx", node.x);
           halo.setAttribute("cy", node.y);
-          halo.setAttribute("r", node.radius + (selected ? 13 : neighbor ? 10 : 9));
-          halo.setAttribute("fill", selected ? "rgba(248,250,252,0.18)" : neighbor ? "rgba(103,232,249,0.16)" : "rgba(245,158,11,0.18)");
-          halo.setAttribute("stroke", "none");
+          halo.setAttribute("r", node.radius + (selected ? 14 : 10));
+          halo.setAttribute("fill", selected ? "rgba(0,245,212,0.14)" : neighbor ? "rgba(0,245,212,0.1)" : "rgba(255,190,11,0.14)");
+          halo.setAttribute("stroke", selected ? "rgba(0,245,212,0.5)" : neighbor ? "rgba(0,245,212,0.3)" : "rgba(255,190,11,0.4)");
+          halo.setAttribute("stroke-width", "1");
           group.appendChild(halo);
-        }}
+        }
 
         const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         circle.setAttribute("cx", node.x);
         circle.setAttribute("cy", node.y);
         circle.setAttribute("r", node.radius);
-        circle.setAttribute("fill", selected ? "rgba(248,250,252,0.98)" : traced ? "rgba(245,158,11,0.94)" : neighbor ? "rgba(103,232,249,0.96)" : typeColor[node.kind]);
-        circle.setAttribute("fill-opacity", dimmed ? "0.24" : selected ? "1" : "0.9");
-        circle.setAttribute("stroke", selected ? "rgba(255,255,255,1)" : traced ? "rgba(245,158,11,1)" : neighbor ? "rgba(103,232,249,1)" : "rgba(255,255,255,0.16)");
-        circle.setAttribute("stroke-width", selected ? "3.6" : traced || neighbor ? "2.6" : "1.3");
+        circle.setAttribute("fill", selected ? "#ffffff" : traced ? "rgba(255,190,11,0.92)" : neighbor ? "rgba(0,245,212,0.92)" : typeColor[node.kind]);
+        circle.setAttribute("fill-opacity", dimmed ? "0.18" : "0.9");
+        circle.setAttribute("stroke", selected ? "#ffffff" : traced ? "rgba(255,190,11,1)" : neighbor ? "rgba(0,245,212,1)" : "rgba(255,255,255,0.12)");
+        circle.setAttribute("stroke-width", selected ? "3" : traced || neighbor ? "2.2" : "1.2");
 
         const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
         label.setAttribute("x", node.x);
-        label.setAttribute("y", node.y + node.radius + 18);
-        label.setAttribute("fill", selected ? "#ffffff" : traced ? "#fcd34d" : neighbor ? "#a5f3fc" : "#d8f3ff");
+        label.setAttribute("y", node.y + node.radius + 16);
+        label.setAttribute("fill", selected ? "#ffffff" : traced ? "#fde68a" : neighbor ? "#00f5d4" : "#b8d9ef");
         label.setAttribute("text-anchor", "middle");
-        label.setAttribute("font-size", "13");
+        label.setAttribute("font-size", "12");
+        label.setAttribute("font-family", "JetBrains Mono, monospace");
         label.setAttribute("font-weight", selected || neighbor || traced ? "700" : "500");
-        label.setAttribute("opacity", dimmed ? "0.28" : "1");
+        label.setAttribute("opacity", dimmed ? "0.22" : "1");
         label.textContent = node.label;
 
         group.append(circle, label);
         nodesLayer.appendChild(group);
-      }});
-    }}
+      });
 
-    function stepSimulation() {{
+      updateCounters();
+    }
+
+    function stepSimulation() {
       const visibleNodes = nodes.filter(isNodeVisible);
       const visibleLinks = links.filter(isLinkVisible);
-
-      for (let i = 0; i < visibleNodes.length; i += 1) {{
-        for (let j = i + 1; j < visibleNodes.length; j += 1) {{
-          const a = visibleNodes[i];
-          const b = visibleNodes[j];
-          let dx = b.x - a.x;
-          let dy = b.y - a.y;
+      for (let i = 0; i < visibleNodes.length; i += 1) {
+        for (let j = i + 1; j < visibleNodes.length; j += 1) {
+          const a = visibleNodes[i], b = visibleNodes[j];
+          let dx = b.x - a.x, dy = b.y - a.y;
           const distanceSq = dx * dx + dy * dy + 0.01;
           const distance = Math.sqrt(distanceSq);
-          const force = 2600 / distanceSq;
-          dx /= distance;
-          dy /= distance;
-          a.vx -= dx * force;
-          a.vy -= dy * force;
-          b.vx += dx * force;
-          b.vy += dy * force;
-        }}
-      }}
-
-      visibleLinks.forEach(link => {{
-        const a = link.sourceNode;
-        const b = link.targetNode;
-        let dx = b.x - a.x;
-        let dy = b.y - a.y;
+          const force = 3000 / distanceSq;
+          dx /= distance; dy /= distance;
+          a.vx -= dx * force; a.vy -= dy * force;
+          b.vx += dx * force; b.vy += dy * force;
+        }
+      }
+      visibleLinks.forEach(link => {
+        const a = link.sourceNode, b = link.targetNode;
+        let dx = b.x - a.x, dy = b.y - a.y;
         const distance = Math.sqrt(dx * dx + dy * dy) || 1;
         const desired = link.type === "defines" ? 110 : 170;
-        const spring = (distance - desired) * 0.0035;
-        dx /= distance;
-        dy /= distance;
-        a.vx += dx * spring;
-        a.vy += dy * spring;
-        b.vx -= dx * spring;
-        b.vy -= dy * spring;
-      }});
-
-      visibleNodes.forEach(node => {{
-        if (draggedNode && draggedNode.id === node.id) {{
-          return;
-        }}
-        node.vx *= 0.86;
-        node.vy *= 0.86;
-        node.x += node.vx;
-        node.y += node.vy;
-      }});
-
+        const spring = (distance - desired) * 0.0005;
+        dx /= distance; dy /= distance;
+        a.vx += dx * spring; a.vy += dy * spring;
+        b.vx -= dx * spring; b.vy -= dy * spring;
+      });
+      visibleNodes.forEach(node => {
+        if (draggedNode && draggedNode.id === node.id) return;
+        node.vx *= 0.8; node.vy *= 0.8;
+        node.x += node.vx; node.y += node.vy;
+      });
       render();
       requestAnimationFrame(stepSimulation);
-    }}
+    }
 
-    function screenToGraph(clientX, clientY) {{
+    function screenToGraph(clientX, clientY) {
       const rect = svg.getBoundingClientRect();
-      return {{
+      return {
         x: (clientX - rect.left - panX) / currentScale,
         y: (clientY - rect.top - panY) / currentScale,
-      }};
-    }}
+      };
+    }
 
-    function findNodeFromEventTarget(target) {{
+    function findNodeFromEventTarget(target) {
       const group = target.closest("g[data-node-id]");
-      if (!group) {{
-        return null;
-      }}
-      return nodeMap.get(group.dataset.nodeId) || null;
-    }}
+      return group ? nodeMap.get(group.dataset.nodeId) || null : null;
+    }
 
-    svg.addEventListener("wheel", event => {{
-      event.preventDefault();
-      const scaleFactor = event.deltaY < 0 ? 1.08 : 0.92;
-      const point = screenToGraph(event.clientX, event.clientY);
-      currentScale = Math.min(3, Math.max(0.45, currentScale * scaleFactor));
-      panX = event.clientX - svg.getBoundingClientRect().left - point.x * currentScale;
-      panY = event.clientY - svg.getBoundingClientRect().top - point.y * currentScale;
+    // ─── Zoom controls ─────────────────────────────────────────────────────────
+    function applyZoom(factor, cx, cy) {
+      const rect = svg.getBoundingClientRect();
+      cx = cx ?? rect.left + rect.width / 2;
+      cy = cy ?? rect.top + rect.height / 2;
+      const point = screenToGraph(cx, cy);
+      currentScale = Math.min(4, Math.max(0.25, currentScale * factor));
+      panX = cx - rect.left - point.x * currentScale;
+      panY = cy - rect.top - point.y * currentScale;
       updateViewportTransform();
-    }}, {{ passive: false }});
+    }
 
-    svg.addEventListener("pointerdown", event => {{
+    document.getElementById("zoomIn").addEventListener("click", () => applyZoom(1.25));
+    document.getElementById("zoomOut").addEventListener("click", () => applyZoom(0.8));
+    document.getElementById("zoomFit").addEventListener("click", () => {
+      currentScale = 1; panX = 0; panY = 0;
+      updateViewportTransform();
+    });
+
+    svg.addEventListener("wheel", event => {
+      event.preventDefault();
+      applyZoom(event.deltaY < 0 ? 1.08 : 0.92, event.clientX, event.clientY);
+    }, { passive: false });
+
+    svg.addEventListener("pointerdown", event => {
       const node = findNodeFromEventTarget(event.target);
-      if (node) {{
+      if (node) {
         event.stopPropagation();
         draggedNode = node;
-        node.vx = 0;
-        node.vy = 0;
+        node.vx = 0; node.vy = 0;
         const point = screenToGraph(event.clientX, event.clientY);
         node.dragOffsetX = point.x - node.x;
         node.dragOffsetY = point.y - node.y;
-        pointerState = {{
-          nodeId: node.id,
-          startClientX: event.clientX,
-          startClientY: event.clientY,
-          moved: false,
-        }};
+        pointerState = { nodeId: node.id, startClientX: event.clientX, startClientY: event.clientY, moved: false };
         return;
-      }}
+      }
       isPanning = true;
       backgroundPointerMoved = false;
       svg.classList.add("dragging");
-      startPan = {{ x: event.clientX - panX, y: event.clientY - panY }};
-    }});
+      startPan = { x: event.clientX - panX, y: event.clientY - panY };
+    });
 
-    window.addEventListener("pointermove", event => {{
-      if (draggedNode) {{
+    window.addEventListener("pointermove", event => {
+      if (draggedNode) {
         const point = screenToGraph(event.clientX, event.clientY);
         draggedNode.x = point.x - draggedNode.dragOffsetX;
         draggedNode.y = point.y - draggedNode.dragOffsetY;
-        if (pointerState) {{
-          const moved = Math.hypot(
-            event.clientX - pointerState.startClientX,
-            event.clientY - pointerState.startClientY
-          );
-          if (moved > 6) {{
-            pointerState.moved = true;
-          }}
-        }}
+        if (pointerState) {
+          const moved = Math.hypot(event.clientX - pointerState.startClientX, event.clientY - pointerState.startClientY);
+          if (moved > 6) pointerState.moved = true;
+        }
         render();
-      }} else if (isPanning) {{
+      } else if (isPanning) {
         panX = event.clientX - startPan.x;
         panY = event.clientY - startPan.y;
         backgroundPointerMoved = true;
         updateViewportTransform();
-      }}
-    }});
+      }
+    });
 
-    window.addEventListener("pointerup", () => {{
-      if (draggedNode && pointerState && !pointerState.moved && draggedNode.id === pointerState.nodeId) {{
+    window.addEventListener("pointerup", () => {
+      if (draggedNode && pointerState && !pointerState.moved && draggedNode.id === pointerState.nodeId) {
         selectNode(draggedNode);
-      }}
-      draggedNode = null;
-      pointerState = null;
-      isPanning = false;
+      }
+      draggedNode = null; pointerState = null; isPanning = false;
       svg.classList.remove("dragging");
-    }});
+    });
 
-    svg.addEventListener("click", event => {{
-      if (findNodeFromEventTarget(event.target)) {{
-        return;
-      }}
-      if (!backgroundPointerMoved) {{
-        clearSelection();
-      }}
+    svg.addEventListener("click", event => {
+      if (findNodeFromEventTarget(event.target)) return;
+      if (!backgroundPointerMoved) clearSelection();
       backgroundPointerMoved = false;
-    }});
+    });
 
     searchInput.addEventListener("input", render);
     Object.values(filters).forEach(input => input.addEventListener("change", render));
     traceWorkflowButton.addEventListener("click", () => traceWorkflowFromInput(workflowInput.value));
     clearWorkflowButton.addEventListener("click", clearWorkflowTrace);
-    workflowInput.addEventListener("keydown", event => {{
-      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {{
-        traceWorkflowFromInput(workflowInput.value);
-      }}
-    }});
+    workflowInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") traceWorkflowFromInput(workflowInput.value);
+    });
 
     updateViewportTransform();
     renderInspector(null);
@@ -1347,7 +1640,7 @@ def write_graph(output_path: Path, root: Path) -> Path:
 
 def main() -> None:
     root = Path(__file__).resolve().parent
-    output_path = root / "codebase_graph.html"
+    output_path = root / "codebase_graph_v2.html"
     write_graph(output_path, root)
     print(f"Generated interactive graph at: {output_path}")
 

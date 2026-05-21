@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>agent_desk-DD · Codebase Graph</title>
+  <title>agent_desk-DD Codebase Graph</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
@@ -209,7 +210,7 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
-      overflow: hidden;
+      overflow-y: auto;
       transition: max-height 250ms ease;
     }
     .filter-group.collapsed { max-height: 0 !important; }
@@ -589,6 +590,13 @@
       .panel, .panel.right { border: none; max-height: none; }
       svg { height: 70vh; }
     }
+    @keyframes flowPulse {
+      from { stroke-dashoffset: 24; }
+      to { stroke-dashoffset: 0; }
+    }
+    .flow-trace {
+      animation: flowPulse 0.6s linear infinite;
+    }
   </style>
 </head>
 <body>
@@ -613,7 +621,7 @@
     <div class="section-label" data-target="filterNodes">
       Node types <i class="caret">▾</i>
     </div>
-    <div class="filter-group" id="filterNodes" style="max-height: 300px;">
+    <div class="filter-group" id="filterNodes" style="max-height: 500vh;">
       <div class="filter-row">
         <label for="modules">
           <span class="filter-dot" style="background:var(--module)"></span>Modules
@@ -644,7 +652,7 @@
     <div class="section-label" data-target="filterEdges">
       Edge types <i class="caret">▾</i>
     </div>
-    <div class="filter-group" id="filterEdges" style="max-height: 200px;">
+    <div class="filter-group" id="filterEdges" style="max-height: 500vh;">
       <div class="filter-row">
         <label for="imports"><span class="filter-dot" style="background:var(--module)"></span>Imports</label>
         <div class="toggle-wrap"><input type="checkbox" id="imports" checked><label class="toggle-switch" for="imports"></label></div>
@@ -688,6 +696,14 @@
   <!-- CENTER: Graph canvas -->
   <main class="workspace">
     <svg id="graph" viewBox="0 0 1400 900" aria-label="Codebase graph">
+      <defs>
+        <marker id="arrow-trace" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="rgba(255,190,11,0.95)" />
+        </marker>
+        <marker id="arrow-selected" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="rgba(103,232,249,0.95)" />
+        </marker>
+      </defs>
       <g id="viewport">
         <g id="links"></g>
         <g id="nodes"></g>
@@ -766,7 +782,7 @@
       "label": "open_app",
       "kind": "function",
       "path": "actions.py:6",
-      "details": "Function open_app in actions.py (lines 6-14)"
+      "details": "Function open_app in actions.py (lines 6-16)"
     },
     {
       "id": "symbol:print",
@@ -793,8 +809,8 @@
       "id": "function:actions.type_text",
       "label": "type_text",
       "kind": "function",
-      "path": "actions.py:16",
-      "details": "Function type_text in actions.py (lines 16-23)"
+      "path": "actions.py:18",
+      "details": "Function type_text in actions.py (lines 18-27)"
     },
     {
       "id": "symbol:pyautogui.write",
@@ -807,8 +823,8 @@
       "id": "function:actions.press_enter",
       "label": "press_enter",
       "kind": "function",
-      "path": "actions.py:25",
-      "details": "Function press_enter in actions.py (lines 25-29)"
+      "path": "actions.py:29",
+      "details": "Function press_enter in actions.py (lines 29-35)"
     },
     {
       "id": "symbol:pyautogui.press",
@@ -821,8 +837,8 @@
       "id": "function:actions.backspace",
       "label": "backspace",
       "kind": "function",
-      "path": "actions.py:31",
-      "details": "Function backspace in actions.py (lines 31-40)"
+      "path": "actions.py:37",
+      "details": "Function backspace in actions.py (lines 37-48)"
     },
     {
       "id": "symbol:int",
@@ -849,8 +865,8 @@
       "id": "function:actions.wait",
       "label": "wait",
       "kind": "function",
-      "path": "actions.py:42",
-      "details": "Function wait in actions.py (lines 42-47)"
+      "path": "actions.py:50",
+      "details": "Function wait in actions.py (lines 50-57)"
     },
     {
       "id": "symbol:sec.isdigit",
@@ -863,8 +879,8 @@
       "id": "function:actions.focus_search",
       "label": "focus_search",
       "kind": "function",
-      "path": "actions.py:49",
-      "details": "Function focus_search in actions.py (lines 49-56)"
+      "path": "actions.py:59",
+      "details": "Function focus_search in actions.py (lines 59-68)"
     },
     {
       "id": "symbol:pyautogui.click",
@@ -884,8 +900,8 @@
       "id": "function:actions.search_web",
       "label": "search_web",
       "kind": "function",
-      "path": "actions.py:58",
-      "details": "Function search_web in actions.py (lines 58-74)"
+      "path": "actions.py:70",
+      "details": "Function search_web in actions.py (lines 70-88)"
     },
     {
       "id": "symbol:platform_urls.get",
@@ -912,8 +928,8 @@
       "id": "function:actions.play_on_youtube",
       "label": "play_on_youtube",
       "kind": "function",
-      "path": "actions.py:76",
-      "details": "Function play_on_youtube in actions.py (lines 76-88)"
+      "path": "actions.py:90",
+      "details": "Function play_on_youtube in actions.py (lines 90-104)"
     },
     {
       "id": "module:intent",
@@ -927,7 +943,7 @@
       "label": "parse_intent",
       "kind": "function",
       "path": "intent.py:1",
-      "details": "Function parse_intent in intent.py (lines 1-86)"
+      "details": "Function parse_intent in intent.py (lines 1-85)"
     },
     {
       "id": "symbol:any",
@@ -993,11 +1009,32 @@
       "details": "External dependency or stdlib module: re"
     },
     {
+      "id": "function:main.handle_failure",
+      "label": "handle_failure",
+      "kind": "function",
+      "path": "main.py:8",
+      "details": "Function handle_failure in main.py (lines 8-24)"
+    },
+    {
+      "id": "symbol:input",
+      "label": "input",
+      "kind": "symbol",
+      "path": "",
+      "details": "Referenced callable symbol: input"
+    },
+    {
+      "id": "symbol:result.get",
+      "label": "result.get",
+      "kind": "symbol",
+      "path": "",
+      "details": "Qualified call reference: result.get"
+    },
+    {
       "id": "function:main.action_parser",
       "label": "action_parser",
       "kind": "function",
-      "path": "main.py:7",
-      "details": "Function action_parser in main.py (lines 7-39)"
+      "path": "main.py:26",
+      "details": "Function action_parser in main.py (lines 26-59)"
     },
     {
       "id": "symbol:isinstance",
@@ -1158,7 +1195,7 @@
       "label": "render_html",
       "kind": "function",
       "path": "visualize_codebase.py:252",
-      "details": "Function render_html in visualize_codebase.py (lines 252-1335)"
+      "details": "Function render_html in visualize_codebase.py (lines 252-1628)"
     },
     {
       "id": "symbol:html.escape",
@@ -1192,8 +1229,8 @@
       "id": "function:visualize_codebase.write_graph",
       "label": "write_graph",
       "kind": "function",
-      "path": "visualize_codebase.py:1338",
-      "details": "Function write_graph in visualize_codebase.py (lines 1338-1345)"
+      "path": "visualize_codebase.py:1631",
+      "details": "Function write_graph in visualize_codebase.py (lines 1631-1638)"
     },
     {
       "id": "symbol:CodebaseAnalyzer",
@@ -1220,8 +1257,8 @@
       "id": "function:visualize_codebase.main",
       "label": "main",
       "kind": "function",
-      "path": "visualize_codebase.py:1348",
-      "details": "Function main in visualize_codebase.py (lines 1348-1352)"
+      "path": "visualize_codebase.py:1641",
+      "details": "Function main in visualize_codebase.py (lines 1641-1645)"
     },
     {
       "id": "symbol:Path",
@@ -1454,11 +1491,6 @@
     },
     {
       "source": "function:intent.parse_intent",
-      "target": "symbol:print",
-      "type": "calls"
-    },
-    {
-      "source": "function:intent.parse_intent",
       "target": "symbol:platform_map.items",
       "type": "calls"
     },
@@ -1501,6 +1533,26 @@
       "source": "module:main",
       "target": "external:time",
       "type": "imports"
+    },
+    {
+      "source": "module:main",
+      "target": "function:main.handle_failure",
+      "type": "defines"
+    },
+    {
+      "source": "function:main.handle_failure",
+      "target": "symbol:input",
+      "type": "calls"
+    },
+    {
+      "source": "function:main.handle_failure",
+      "target": "symbol:print",
+      "type": "calls"
+    },
+    {
+      "source": "function:main.handle_failure",
+      "target": "symbol:result.get",
+      "type": "calls"
     },
     {
       "source": "module:main",
@@ -1700,10 +1752,10 @@
   ],
   "summary": {
     "module_count": 4,
-    "function_count": 14,
+    "function_count": 15,
     "external_count": 12,
-    "symbol_count": 42,
-    "link_count": 93
+    "symbol_count": 44,
+    "link_count": 96
   }
 };
 
@@ -1776,6 +1828,7 @@
     let workflowTraceEdgeSet = new Set();
     let workflowTraceStepsData = [];
     let activePulse = null;
+    let traceStartedAt = null;
     let currentScale = 1;
     let panX = 0;
     let panY = 0;
@@ -1939,6 +1992,18 @@
       return 0.5 * (1 - elapsed / 850);
     }
 
+    function edgeTravelProgress(link, now) {
+      if (!workflowTraceEdgeSet || !workflowTraceEdgeSet.size) return null;
+      const key = linkKey(link.source, link.target);
+      if (!workflowTraceEdgeSet.has(key)) return null;
+      const traceIndex = [...workflowTraceEdgeSet].indexOf(key);
+      const delay = traceIndex * 300;
+      const elapsed = now - traceStartedAt - delay;
+      if (elapsed < 0 || elapsed > 600) return null;
+      return elapsed / 600;
+    }
+
+
     function renderWorkflowTrace(steps) {
       if (!steps.length) {
         workflowSteps.innerHTML = '<div class="empty">Run a workflow trace to see the execution path.</div>';
@@ -1961,6 +2026,7 @@
       workflowTraceStepsData = steps;
       workflowStatus.innerHTML = `<strong>trace</strong> — ${statusText}`;
       renderWorkflowTrace(steps);
+      traceStartedAt = performance.now();
       render();
     }
 
@@ -1976,7 +2042,7 @@
 
     function splitChunks(text) {
       return text.toLowerCase()
-        .split(/\b(?:and then|after that|then|and)\b/g)
+        .split(/(?:and then|after that|then|and)/g)
         .map(part => part.trim()).filter(Boolean);
     }
 
@@ -2092,8 +2158,33 @@
         if (selectedNode && !selectedEdge && !tracedEdge) line.setAttribute("opacity", "0.18");
         line.setAttribute("stroke", stroke);
         line.setAttribute("stroke-width", strokeWidth);
-        line.setAttribute("stroke-dasharray", link.type === "imports" ? "5 5" : "0");
+        if (tracedEdge) {
+          line.setAttribute("stroke-dasharray", "10 4");
+          line.setAttribute("marker-end", "url(#arrow-trace)");
+          line.classList.add("flow-trace");
+        } else if (selectedEdge) {
+          line.setAttribute("stroke-dasharray", "0");
+          line.setAttribute("marker-end", "url(#arrow-selected)");
+        } else {
+          line.setAttribute("stroke-dasharray", link.type === "imports" ? "5 5" : "0");
+        }
         linksLayer.appendChild(line);
+        const travelProgress = edgeTravelProgress(link, now);
+        if (travelProgress !== null) {
+          if (!link.sourceNode || !link.targetNode) return;
+          const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          const sx = link.sourceNode.x, sy = link.sourceNode.y;
+          const tx = link.targetNode.x, ty = link.targetNode.y;
+          const angle = Math.atan2(ty - sy, tx - sx) * 180 / Math.PI;
+          const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+          const cx = sx + (tx - sx) * travelProgress;
+          const cy = sy + (ty - sy) * travelProgress;
+          arrow.setAttribute("points", "0,-6 14,0 0,6");
+          arrow.setAttribute("fill", "rgba(255,190,11,0.95)");
+          arrow.setAttribute("transform", `translate(${cx},${cy}) rotate(${angle})`);
+          arrow.setAttribute("pointer-events", "none");
+          linksLayer.appendChild(arrow);
+        }
       });
 
       visNodes.forEach(node => {
@@ -2167,7 +2258,7 @@
           let dx = b.x - a.x, dy = b.y - a.y;
           const distanceSq = dx * dx + dy * dy + 0.01;
           const distance = Math.sqrt(distanceSq);
-          const force = 2600 / distanceSq;
+          const force = 3000 / distanceSq;
           dx /= distance; dy /= distance;
           a.vx -= dx * force; a.vy -= dy * force;
           b.vx += dx * force; b.vy += dy * force;
@@ -2178,14 +2269,14 @@
         let dx = b.x - a.x, dy = b.y - a.y;
         const distance = Math.sqrt(dx * dx + dy * dy) || 1;
         const desired = link.type === "defines" ? 110 : 170;
-        const spring = (distance - desired) * 0.0035;
+        const spring = (distance - desired) * 0.0005;
         dx /= distance; dy /= distance;
         a.vx += dx * spring; a.vy += dy * spring;
         b.vx -= dx * spring; b.vy -= dy * spring;
       });
       visibleNodes.forEach(node => {
         if (draggedNode && draggedNode.id === node.id) return;
-        node.vx *= 0.86; node.vy *= 0.86;
+        node.vx *= 0.8; node.vy *= 0.8;
         node.x += node.vx; node.y += node.vy;
       });
       render();

@@ -6,14 +6,17 @@ import webbrowser
 def open_app(target, platform=None):
     if not target:
         print("No app mentioned to open.")
-        return
+        return {"success": False, "reason": "No target specified", "action": "open"}
     try:
-        subprocess.Popen(["cmd", "/c", "start", target])
-        time.sleep(2)  
+        result = subprocess.run(["cmd", "/c", "start", "", target], 
+                               capture_output=True, timeout=5)
+        if result.returncode != 0:
+            print(f"Failed to open {target}")
+            return {"success": False, "reason": f"App not found: {target}", "action": "open"}
+        time.sleep(2)
+        return {"success": True, "action": "open"}
     except Exception as e:
-        print("Could not open:", target)
-        return False
-    return True
+        return {"success": False, "reason": str(e), "action": "open"}
 
 def type_text(text, platform=None):
     if not text:
@@ -23,16 +26,16 @@ def type_text(text, platform=None):
         pyautogui.write(text, interval=0.05)
     except Exception as e:
         print("Typing failed:", e)
-        return False
-    return True
+        return {"success": False, "reason": "Failed to type text", "action": "type"}
+    return {"success": True, "action": "type"}
 
 def press_enter(_):
     try:
         pyautogui.press('enter')
     except Exception as e:
         print("Failed to press enter:", e)
-        return False
-    return True
+        return {"success": False, "reason": "Failed to press enter", "action": "enter"}
+    return {"success": True, "action": "enter"} 
 
 def backspace(data, platform=None):
     try:
@@ -44,8 +47,8 @@ def backspace(data, platform=None):
             pyautogui.hotkey("ctrl", "backspace")
     except Exception as e:
         print("Failed to press backspace:", e)
-        return False
-    return True
+        return {"success": False, "reason": "Failed to press backspace", "action": "del"}
+    return {"success": True, "action": "del"}
 
 def wait(sec, platform=None):
     try:
@@ -53,8 +56,8 @@ def wait(sec, platform=None):
         time.sleep(seconds)
     except Exception as e:
         print("Wait failed:", e)
-        return False
-    return True
+        return {"success": False, "reason": "Failed to wait", "action": "wait"}
+    return {"success": True, "action": "wait"}  
 
 def focus_search(_, platform=None):
     try:
@@ -64,8 +67,8 @@ def focus_search(_, platform=None):
         pyautogui.hotkey('ctrl', 'l') 
     except Exception as e:
         print("Failed to focus search bar:", e)
-        return False
-    return True
+        return {"success": False, "reason": "Failed to focus search bar", "action": "focus"}    
+    return {"success": True, "action": "focus"}
 
 def search_web(query, platform="google"):
     if not query:
@@ -84,8 +87,8 @@ def search_web(query, platform="google"):
             print(f"Search not supported on {platform}")
     except Exception as e:
         print("Search failed:", e)
-        return False
-    return True
+        return {"success": False, "reason": "Failed to search", "action": "search"} 
+    return {"success": True, "action": "search"}
 
 def play_on_youtube(query, platform="youtube"):
     if not query:
@@ -100,8 +103,8 @@ def play_on_youtube(query, platform="youtube"):
         webbrowser.open(url)
     except Exception as e:
         print("Play failed:", e)
-        return False
-    return True
+        return {"success": False, "reason": "Failed to play on YouTube", "action": "play"}
+    return {"success": True, "action": "play"}
 
 actions = {
     "open": open_app,

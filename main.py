@@ -2,7 +2,26 @@ import actions as action_module
 import intent as intent_module
 import time
 import re
+
 print("Hi there! I'm AgentDesk, your personal desktop assistant. How can I help you today?")
+
+def handle_failure(result):
+    action = result.get("action")
+    reason = result.get("reason")
+    print(f"\nFailed: {action} — {reason}")
+    print("Options: retry / skip / stop")
+    choice = input(">> ").strip().lower()
+    if choice == "retry":
+        return "retry"
+    elif choice == "skip":
+        print("Skipping this step.")
+        return "skip"
+    elif choice == "stop":
+        print("Stopping execution.")
+        return "stop"
+    else:
+        print("Invalid choice. Skipping by default.")
+        return "skip"
 
 def action_parser(command):
     if isinstance(command, dict):
@@ -20,23 +39,24 @@ def action_parser(command):
                 return action_module.actions[action](query)
         else:
             print(f"Unknown action: {action}")
-        return False
-    
+            return {"success": False, "reason": "Unknown action", "action": action}
+
     words = command.split()
     if not words:
-        return
+        return {"success": False, "reason": "Empty command", "action": None}
 
     action = words[0]
     data = " ".join(words[1:]).strip()
-    
+
     for key in action_module.aliases:
         if key in data:
-           data = data.replace(key, action_module.aliases[key])
+            data = data.replace(key, action_module.aliases[key])
 
     if action in action_module.actions:
-        action_module.actions[action](data)
+        return action_module.actions[action](data)
     else:
         print(f"Unknown command: {action}")
+        return {"success": False, "reason": "Unknown command", "action": action}
 
 workflow_state = {
     "current_step": 0,
@@ -55,7 +75,7 @@ while True:
 
     if raw == "end":
         print("Goodbye! Have a great day!")
-        break   
+        break
 
     if not raw:
         continue
@@ -63,10 +83,7 @@ while True:
     split_pattern = r'\band\b |\band then\b|\bthen\b|\bafter that\b'
     chunks = re.split(split_pattern, raw)
     chunks = [c.strip() for c in chunks if c.strip()]
-    workflow_state["total_steps"] = len(chunks)
-    workflow_state["current_step"] = 0
-    workflow_state["status"] = "running"
-    
+
     execution_queue = []
     for chunk in chunks:
         parsed = intent_module.parse_intent(chunk)
@@ -78,43 +95,36 @@ while True:
             execution_queue.append(chunk)
 
     workflow_state["total_steps"] = len(execution_queue)
+    workflow_state["current_step"] = 0
+    workflow_state["status"] = "running"
 
-    for chunk in execution_queue:
-        if isinstance(chunk, str):
-            chunk = chunk.strip()
-            if not chunk:
-                continue
-            parsed = intent_module.parse_intent(chunk)
-        else:
-            parsed = chunk
-        if isinstance(parsed, list):
-            for item in parsed:
-                result = action_parser(item)
-                time.sleep(3)
-                workflow_state["current_step"] += 1
-                if result:
-                    workflow_state["last_completed_action"] = item.get("action")
-                    workflow_state["last_successful_step"] = workflow_state["current_step"]
-                    if item.get("action") == "open":
-                        workflow_state["current_app"] = item.get("query")
-                else:
-                    workflow_state["failed_step"] = workflow_state["current_step"]
-                    workflow_state["failure_reason"] = f"Action '{item.get('action')}' failed"
-                    workflow_state["status"] = "failed"
-                    print(f"Step {workflow_state['current_step']} failed: {workflow_state['failure_reason']}")
-        elif parsed:
-            result = action_parser(parsed)
-            time.sleep(3)
-            workflow_state["current_step"] += 1 
-            if result:
-                workflow_state["last_completed_action"] = parsed.get("action")
+    stop_execution = False
+
+    for item in execution_queue:
+        if stop_execution:
+            break
+
+        result = action_parser(item)
+        time.sleep(3)
+        workflow_state["current_step"] += 1
+
+        if result and result.get("success"):
+            if isinstance(item, dict):
+                workflow_state["last_completed_action"] = item.get("action")
                 workflow_state["last_successful_step"] = workflow_state["current_step"]
-                if parsed.get("action") == "open":
-                    workflow_state["current_app"] = parsed.get("query")
-            else:
-                workflow_state["failed_step"] = workflow_state["current_step"]
-                workflow_state["failure_reason"] = f"Action '{parsed.get('action')}' failed"
-                workflow_state["status"] = "failed"
-                print(f"Step {workflow_state['current_step']} failed: {workflow_state['failure_reason']}")        
-    workflow_state["status"] = "completed"
-    print(workflow_state)
+                if item.get("action") == "open":
+                    workflow_state["current_app"] = item.get("query")
+        else:
+            workflow_state["failed_step"] = workflow_state["current_step"]
+            workflow_state["failure_reason"] = f"Action '{item.get('action') if isinstance(item, dict) else item}' failed"
+            workflow_state["status"] = "failed"
+
+            choice = handle_failure(result)
+            if choice == "retry":
+                result = action_parser(item)
+                workflow_state["retry_count"] += 1
+            elif choice == "stop":
+                stop_execution = True
+
+    if not stop_execution:
+        workflow_state["status"] = "completed"
