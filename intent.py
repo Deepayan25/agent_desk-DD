@@ -1,11 +1,11 @@
 def parse_intent(user_input):
-    user_input = user_input.lower()
-    words = user_input.split()
+    user_input_lower = user_input.lower()
+    words = user_input_lower.split()
 
     if not words:
         return None
     
-    primitive_actions = ["open", "wait", "enter", "del", "focus"]
+    primitive_actions = ["open", "wait", "enter", "del", "focus", "prevline"]
     if words[0] in primitive_actions:
         return {"action": words[0], "query": " ".join(words[1:]), "platform": None}
     platform_map = {
@@ -26,8 +26,8 @@ def parse_intent(user_input):
 
     # question pattern check before anything else
     for pattern in question_patterns:
-        if user_input.startswith(pattern):
-            query = user_input.replace(pattern, "").strip()
+        if user_input_lower.startswith(pattern):
+            query = user_input_lower.replace(pattern, "").strip()
             return {"action": "search", "query": query, "platform": "google"}
 
     clean_words = [w for w in words if w not in stopwords]
@@ -70,16 +70,16 @@ def parse_intent(user_input):
         if any(w in clean_words for w in ["play", "watch", "listen"]):
             query = " ".join([w for w in clean_words if w not in action_keywords])
             return {"action": "play", "query": query, "platform": platform or "youtube"} if query else None
-
-        if any(w in clean_words for w in ["type", "write"]):
-            text = " ".join([w for w in clean_words if w not in action_keywords])
-            if not text:
-                return None
-            if platform:
-                return [
-                    {"action": "open", "query": platform, "platform": None},
-                    {"action": "type", "query": text, "platform": None}
+        
+        original_words = user_input.split()
+        text = " ".join([w for w in original_words if w.lower() not in action_keywords and w.lower() not in platform_map])
+        if not text:
+            return None
+        if platform:
+            return [
+                {"action": "open", "query": platform, "platform": None},
+                {"action": "type", "query": text, "platform": None}
                 ]
-            return {"action": "type", "query": text, "platform": None}
+        return {"action": "type", "query": text, "platform": None}
 
         return None

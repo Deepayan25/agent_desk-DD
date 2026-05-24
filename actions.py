@@ -41,14 +41,26 @@ def backspace(data, platform=None):
     try:
         if not data:
             pyautogui.hotkey("ctrl", "backspace")
+        elif data == "line":
+            pyautogui.hotkey("shift", "home")
+            pyautogui.press("delete")
         elif data.isdigit():
             pyautogui.press("backspace", presses=int(data))
         else:
             pyautogui.hotkey("ctrl", "backspace")
     except Exception as e:
         print("Failed to press backspace:", e)
-        return {"success": False, "reason": "Failed to press backspace", "action": "del"}
+        return {"success": False, "reason": str(e), "action": "del"}
     return {"success": True, "action": "del"}
+
+def prev_line(data, platform=None):
+    try:
+        pyautogui.press("end")
+        pyautogui.hotkey("shift", "up")
+        pyautogui.hotkey("shift", "end")
+        return {"success": True, "action": "prevline"}
+    except Exception as e:
+        return {"success": False, "reason": str(e), "action": "prevline"}
 
 def wait(sec, platform=None):
     try:
@@ -112,6 +124,7 @@ actions = {
     "wait": wait,   
     "enter": press_enter,
     "del": backspace,
+    "prevline": prev_line,
     "focus": focus_search,
     "search": search_web,
     "play": play_on_youtube
