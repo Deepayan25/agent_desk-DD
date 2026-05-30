@@ -118,6 +118,24 @@ def play_on_youtube(query, platform="youtube"):
         return {"success": False, "reason": "Failed to play on YouTube", "action": "play"}
     return {"success": True, "action": "play"}
 
+def show_help(data=None, platform=None):
+    print("\n===== AGENTDESK HELP =====")
+    print("open <app>")
+    print("search <query>")
+    print("search <query> in youtube")
+    print("play <query>")
+    print("type <text>")
+    print("wait <seconds>")
+    print("enter")
+    print("del")
+    print("focus")
+    print("prevline")
+    print("help")
+    print("exit")
+    print("==========================")
+
+    return {"success": True, "action": "help"}
+
 actions = {
     "open": open_app,
     "type": type_text,
@@ -127,7 +145,8 @@ actions = {
     "prevline": prev_line,
     "focus": focus_search,
     "search": search_web,
-    "play": play_on_youtube
+    "play": play_on_youtube,
+    "help" : show_help
 }
 
 aliases = {
