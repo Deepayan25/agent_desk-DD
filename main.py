@@ -1,9 +1,10 @@
-# imported module
-import controller as controller_module
-
-#starting agent_desk
-
-print("Hi there! I'm AgentDesk, your personal desktop assistant. How can I help you today?")
+import sys
+from PyQt6.QtWidgets import QApplication
+from UI import AgentDeskWindow
 
 if __name__ == "__main__":
-    controller_module.run()
+    app = QApplication(sys.argv)
+    
+    window = AgentDeskWindow()
+    window.show()
+    sys.exit(app.exec())

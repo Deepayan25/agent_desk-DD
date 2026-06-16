@@ -72,7 +72,15 @@ def parse_intent(user_input):
             return {"action": "play", "query": query, "platform": platform or "youtube"} if query else None
         
         original_words = user_input.split()
-        text = " ".join([w for w in original_words if w.lower() not in action_keywords and w.lower() not in platform_map])
+        text = " ".join(
+            [
+                w
+                for w in original_words
+                if w.lower() not in action_keywords
+                and w.lower() not in platform_map
+                and w.lower() not in stopwords
+            ]
+        )
         if not text:
             return None
         if platform:
@@ -81,5 +89,3 @@ def parse_intent(user_input):
                 {"action": "type", "query": text, "platform": None}
                 ]
         return {"action": "type", "query": text, "platform": None}
-
-        return None
