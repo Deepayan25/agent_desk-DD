@@ -1,3 +1,4 @@
+from actions import show_help
 def parse_intent(user_input):
     user_input_lower = user_input.lower()
     words = user_input_lower.split()
@@ -5,7 +6,7 @@ def parse_intent(user_input):
     if not words:
         return None
     
-    primitive_actions = ["open", "wait", "enter", "del", "focus", "prevline"]
+    primitive_actions = ["open", "wait", "enter", "del", "focus", "prevline","help"]
     if words[0] in primitive_actions:
         return {"action": words[0], "query": " ".join(words[1:]), "platform": None}
     platform_map = {
@@ -18,6 +19,7 @@ def parse_intent(user_input):
         "ggl": "google",
         "xl" : "excel",
         "word": "winword",
+        "help" : show_help
     }
 
     action_keywords = ["play", "write", "open", "type", "search", "watch", "listen", "find"]
