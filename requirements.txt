@@ -1,12 +1,24 @@
-modules used (external):
-- pyautogui
+# ==========================
 
-modules used (built-in):
-- webbrowser
-- subprocess
-- time
-- re
+# MANAS - Python Dependencies
 
-modules created:
-- actions.py
-- intent.py
+# ==========================
+
+# Desktop Automation
+
+pyautogui>=0.9.54
+
+# Desktop GUI
+
+PyQt6>=6.9.0
+
+# Codebase Visualization
+
+networkx>=3.5
+pyvis>=0.3.2
+
+# (Upcoming in v0.6)
+
+# selenium>=4.33.0
+
+# pywinauto>=0.6.9
