@@ -6,7 +6,7 @@ MANAS is an open-source AI desktop assistant designed to bridge natural language
 
 Unlike traditional voice assistants, MANAS is being built as a desktop operating layer—combining automation, natural language understanding, local AI models, and an evolving graphical interface into a single system.
 
-> **Current Status:** Active Development (v0.5e)
+> **Current Status:** Active Development (v0.6.1)
 
 ---
 
@@ -52,10 +52,10 @@ Current support:
 * Mouse automation
 * Web search
 * Multi-step workflows
+* Selenium browser automation prototype
 
-Upcoming:
+upcoming:
 
-* Selenium browser automation
 * PyWinAuto desktop automation
 
 ---
@@ -107,8 +107,11 @@ MANAS
 ├── intent.py
 │   Natural language understanding
 │
-├── actions.py
-│   Desktop action execution
+├── actions/
+|    |- keyboard.py
+|    |- browser.py
+|    |- _init_.py
+|.   |- system.py
 │
 ├── UI.py
 │   PyQt6 desktop interface
