@@ -1,4 +1,6 @@
-from actions import show_help
+from sys import platform
+
+from actions import __init__, browser, keyboard, system
 def parse_intent(user_input):
     user_input_lower = user_input.lower()
     words = user_input_lower.split()
@@ -19,7 +21,7 @@ def parse_intent(user_input):
         "ggl": "google",
         "xl" : "excel",
         "word": "winword",
-        "help" : show_help
+        "help" : system.show_help
     }
 
     action_keywords = ["play", "write", "open", "type", "search", "watch", "listen", "find"]
@@ -67,6 +69,10 @@ def parse_intent(user_input):
 
         if any(w in clean_words for w in ["search", "find"]):
             query = " ".join([w for w in clean_words if w not in action_keywords])
+
+            if platform == "youtube":
+                return {"action": "play", "query": query, "platform": "youtube"}
+
             return {"action": "search", "query": query, "platform": platform or "google"} if query else None
 
         if any(w in clean_words for w in ["play", "watch", "listen"]):

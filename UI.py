@@ -20,13 +20,13 @@ class AgentWorker(QThread):
         self.command_queue.put(cmd)
 
     def run(self):
-        import controller as controller_module
+        import executor as execution_module
         self.message.emit("Worker started.")
 
         while True:
             cmd = self.command_queue.get()
             try:
-                results = controller_module.execute_raw_command(cmd)
+                results = execution_module.execution_workflow(cmd)
             except Exception as exc:
                 self.message.emit(f"Worker error: {exc}")
                 continue
@@ -35,13 +35,22 @@ class AgentWorker(QThread):
                 self.message.emit("No action could be parsed from that command.")
                 continue
 
-            for result in results:
-                action = result.get("action") or "command"
-                if result.get("success"):
-                    self.message.emit(f"{action} completed.")
-                else:
-                    reason = result.get("reason", "Unknown error")
-                    self.message.emit(f"{action} failed: {reason}")
+            if results[-1].get("waiting_for_user"):
+                failure = results[-1].get("failure", {})
+                action = failure.get("action", "Action")
+                reason = failure.get("reason", "Unknown error")
+
+                self.message.emit(f"{action} failed: {reason}")
+                self.message.emit("Waiting for user decision...")
+                continue
+
+            action = results.get("action", "command")
+
+            if results.get("success"):
+                self.message.emit(f"{action} completed.")
+            else:
+                reason = results.get("reason", "Unknown error")
+                self.message.emit(f"{action} failed: {reason}")
 
 
 # ── Floating Console Widget ──────────────────────────────────────────────────
