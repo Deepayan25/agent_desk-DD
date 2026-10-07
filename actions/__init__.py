@@ -1,6 +1,7 @@
 from .system import open_app, wait, show_help
 from .keyboard import focus_search, type_text, press_enter, backspace, prev_line
 from .browser import search_web, navigate_to, search_youtube
+from .pywinauto import get_notepad, type_text as pywinauto_type_text, press_key as pywinauto_press_key
 actions = {
     "open": open_app,
     "wait": wait,
