@@ -1,33 +1,39 @@
-import time
-import pyautogui
+"""
+MANAS Chrome launcher.
 
+Launches a dedicated Chrome instance with the remote debugging port
+open, so Selenium can attach to it. No Win+R, no CMD, no focus stealing.
+"""
+
+import subprocess
 
 CHROME_PATH = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
 DEBUGGER_ADDRESS = "127.0.0.1:9222"
-MANAS_PROFILE = r"%TEMP%\MANAS-Chrome"
+MANAS_PROFILE = r"C:\MANAS-Chrome-Profile"
+
 
 def launch_browser():
-    """Launch the dedicated MANAS Chrome profile using PyAutoGUI."""
+    """Launch the dedicated MANAS Chrome profile with the debug port open."""
     try:
-        pyautogui.hotkey("win", "r")
-        time.sleep(1)
-
-        pyautogui.write("cmd", interval=0.03)
-        pyautogui.press("enter")
-        time.sleep(1.5)
-
-        command = (
-            f'"{CHROME_PATH}" '
-            f'--remote-debugging-port=9222 '
-            f'--user-data-dir="{MANAS_PROFILE}"'
+        subprocess.Popen(
+            [
+                CHROME_PATH,
+                "--remote-debugging-port=9222",
+                f"--user-data-dir={MANAS_PROFILE}",
+                "--no-first-run",
+                "--no-default-browser-check",
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
         )
-
-        pyautogui.write(command, interval=0.01)
-        pyautogui.press("enter")
-        time.sleep(2)
-
         return {"success": True, "action": "launch_browser"}
 
+    except FileNotFoundError:
+        return {
+            "success": False,
+            "reason": f"Chrome not found at {CHROME_PATH}",
+            "action": "launch_browser",
+        }
     except Exception as e:
         return {
             "success": False,

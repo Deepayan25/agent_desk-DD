@@ -11,13 +11,18 @@ from PyQt6.QtWidgets import (
 
 class AgentWorker(QThread):
     message = pyqtSignal(str)
+    ask_user = pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
         self.command_queue = Queue()
+        self.response_queue = Queue()
 
     def send_command(self, cmd):
         self.command_queue.put(cmd)
+
+    def send_response(self, reply):
+        self.response_queue.put(reply)
 
     def run(self):
         import executor as execution_module
@@ -44,12 +49,49 @@ class AgentWorker(QThread):
                 self.message.emit("Waiting for user decision...")
                 continue
 
-            action = results.get("action", "command")
+            if results[-1].get("success"):
+                self.message.emit("Done.")
 
-            if results.get("success"):
-                self.message.emit(f"{action} completed.")
+                if self._should_enter_browser_loop(cmd):
+                    self._fake_browser_loop(cmd)
             else:
-                reason = results.get("reason", "Unknown error")
+                reason = results[-1].get("reason", "Unknown error")
+                self.message.emit(f"Failed: {reason}")
+
+    def _should_enter_browser_loop(self, cmd):
+        return cmd.strip().lower().startswith("open")
+
+    def _fake_browser_loop(self, cmd):
+        import actions
+
+        while True:
+            self.ask_user.emit("what to do, sir?")
+            reply = self.response_queue.get()
+
+            if reply.lower().strip() in ("done", "thanks"):
+                self.message.emit("okay, back to normal.")
+                return
+
+            # Parse reply: first word is action, rest is the query
+            parts = reply.strip().split(maxsplit=1)
+            action = parts[0].lower()
+            query = parts[1] if len(parts) > 1 else ""
+
+            handler = actions.actions.get(action)
+            if handler is None:
+                self.message.emit(f"I don't know how to '{action}', sir.")
+                continue
+
+            try:
+                result = handler(query)
+            except Exception as e:
+                self.message.emit(f"'{action}' failed: {e}")
+                continue
+
+            if result and result.get("success"):
+                self.message.emit(f"{action} done.")
+            else:
+                reason = (result or {}).get("reason", "unknown error")
                 self.message.emit(f"{action} failed: {reason}")
 
 
@@ -77,6 +119,7 @@ class AgentDeskWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("AgentDesk")
         self.setMinimumSize(700, 500)
+        self.expecting_reply = False 
         self.setup_ui()
         self._start_worker()
 
@@ -136,8 +179,18 @@ class AgentDeskWindow(QMainWindow):
 
     def _start_worker(self):
         self.worker = AgentWorker()
-        self.worker.message.connect(self.log.append)
+        self.worker.message.connect(self._on_worker_message)
+        self.worker.ask_user.connect(self._on_worker_ask)
         self.worker.start()
+
+    def _on_worker_message(self, text):
+        self.log.append(text)
+
+    def _on_worker_ask(self, question):
+        self.expecting_reply = True
+        self.log.append(question)
+        self.input_field.setPlaceholderText("reply...")
+        self.input_field.setFocus()
 
     # ── Console Visibility ───────────────────────────────────────────────────
 
@@ -155,6 +208,12 @@ class AgentDeskWindow(QMainWindow):
         cmd = self.input_field.text().strip()
         if not cmd:
             return
-        self.log.append(cmd)
-        self.worker.send_command(cmd)
+        self.log.append(f"> {cmd}")
         self.input_field.clear()
+
+        if getattr(self, "expecting_reply", False):
+            self.worker.send_response(cmd)
+            self.expecting_reply = False
+            self.input_field.setPlaceholderText("Type a command...")
+        else:
+            self.worker.send_command(cmd)

@@ -1,12 +1,12 @@
-# MANAS (formerly AgentDesk)
+# MANAS
 
 > **A local-first Personal AI Operating System built in Python.**
 
 MANAS is an open-source AI desktop assistant designed to bridge natural language and real desktop automation. It aims to become an intelligent local companion capable of understanding human instructions, reasoning about workflows, and interacting with applications just like a human user.
 
-Unlike traditional voice assistants, MANAS is being built as a desktop operating layer—combining automation, natural language understanding, local AI models, and an evolving graphical interface into a single system.
+Unlike traditional voice assistants, MANAS is being built as a desktop operating layer — combining automation, natural language understanding, local AI models, and an evolving graphical interface into a single system.
 
-> **Current Status:** Active Development (v0.6.1)
+> **Current Status:** Active Development (v0.6.2)
 
 ---
 
@@ -20,10 +20,10 @@ Examples:
 
 ```text
 open notepad
-search python in youtube
 play lofi music
-what is reinforcement learning
-open notepad then type hello world
+search python on google
+nav youtube
+scroll down 500
 ```
 
 ---
@@ -34,12 +34,12 @@ MANAS converts natural language into structured executable actions.
 
 Current capabilities include:
 
-* Intent parsing
-* Sequential command execution
-* Platform detection
-* Alias handling
-* Question-to-search conversion
-* Workflow state tracking
+- Intent parsing
+- Sequential command execution
+- Platform detection
+- Alias handling
+- Question-to-search conversion
+- Workflow state tracking
 
 ---
 
@@ -47,16 +47,20 @@ Current capabilities include:
 
 Current support:
 
-* Application launching
-* Keyboard automation
-* Mouse automation
-* Web search
-* Multi-step workflows
-* Selenium browser automation prototype
+- Application launching
+- Keyboard automation
+- Mouse automation
+- Web search
+- Multi-step workflows
+- Selenium-based browser automation (CDP attach mode)
+- Page scrolling (direction + distance)
 
-upcoming:
+Upcoming:
 
-* PyWinAuto desktop automation
+- PyWinAuto desktop automation
+- Page reading, clicking, and typing via `interactions.py`
+- Browser command loop ("what to do, sir?")
+- Natural language browser commands
 
 ---
 
@@ -64,11 +68,12 @@ upcoming:
 
 Current UI includes:
 
-* PyQt6 desktop application
-* Background worker thread
-* Floating console prototype
-* Draggable interface components
-* Foundation for future dashboard
+- PyQt6 desktop application
+- Background worker thread (QThread-based)
+- Two-queue worker pattern (commands + responses)
+- Floating console
+- Draggable interface components
+- Foundation for future dashboard
 
 The UI is being developed progressively alongside new capabilities rather than all at once.
 
@@ -78,16 +83,16 @@ The UI is being developed progressively alongside new capabilities rather than a
 
 Generate an interactive graph of the entire project.
 
-```bash
+```
 python visualize_codebase.py
 ```
 
 Visualizes:
 
-* Modules
-* Functions
-* Imports
-* Call relationships
+- Modules
+- Functions
+- Imports
+- Call relationships
 
 Useful for understanding project architecture and onboarding contributors.
 
@@ -101,24 +106,46 @@ MANAS
 ├── main.py
 │   Application entry point
 │
-├── controller.py
-│   Command execution pipeline
+├── UI.py
+│   PyQt6 interface + background worker thread
+│
+├── executor.py
+│   Command execution pipeline and workflow state
 │
 ├── intent.py
 │   Natural language understanding
 │
 ├── actions/
-|    |- keyboard.py
-|    |- browser.py
-|    |- _init_.py
-|.   |- system.py
+│   ├── __init__.py
+│   │   Action registry + alias map
+│   │
+│   ├── system.py
+│   │   App launching, wait, help
+│   │
+│   ├── keyboard.py
+│   │   Keyboard automation (type, enter, del, focus)
+│   │
+│   ├── pywinauto.py
+│   │   Window-scoped automation (Notepad-focused for now)
+│   │
+│   └── browser_tools/
+│       ├── launcher.py
+│       │   Launches dedicated MANAS Chrome with debug port
+│       │
+│       ├── controller.py
+│       │   Attaches Selenium to MANAS Chrome
+│       │
+│       ├── navigation.py
+│       │   URL opening, web search, YouTube search
+│       │
+│       └── interactions.py
+│           Page-level actions (scroll, and eventually read/click/type)
 │
-├── UI.py
-│   PyQt6 desktop interface
-│
-├── visualize_codebase.py
-│   Interactive architecture visualizer
+└── visualize_codebase.py
+    Interactive architecture visualizer
 ```
+
+The browser layer was extracted from a single `browser.py` file into the modular `browser_tools/` package. Each module has one job: launch, attach, navigate, or interact.
 
 ---
 
@@ -126,20 +153,20 @@ MANAS
 
 Clone the repository
 
-```bash
+```
 git clone https://github.com/<your-username>/agent_desk-DD.git
 cd agent_desk-DD
 ```
 
 Install dependencies
 
-```bash
+```
 pip install -r requirements.txt
 ```
 
 Run MANAS
 
-```bash
+```
 python main.py
 ```
 
@@ -147,30 +174,34 @@ python main.py
 
 # Current Roadmap
 
-## v0.6
+## v0.6 — Browser Foundation *(in progress)*
 
-* Selenium integration
-* PyWinAuto integration
-* Browser automation
-* Expanded UI
+- ✅ Selenium integration (CDP attach mode)
+- ✅ Dedicated MANAS Chrome profile
+- ✅ URL navigation, web search, YouTube search
+- ✅ Page scrolling
+- ⏳ Browser command loop ("what to do, sir?")
+- ⏳ Read, click, type interactions
+- ⏳ PyWinAuto integration
 
 ## v0.7
 
-* Memory system
-* Context awareness
-* Improved reasoning
+- Memory system
+- Context awareness
+- Improved reasoning
 
 ## v0.8
 
-* Local LLM integration (Qwen)
-* Streaming responses
-* AI conversation
+- Local LLM integration (Qwen / Gemma)
+- Streaming responses
+- AI conversation
+- Strict-schema planner mode
 
 ## v0.9
 
-* Autonomous workflows
-* Agent improvements
-* Plugin architecture
+- Autonomous workflows
+- Agent improvements
+- Plugin architecture
 
 ## v1.0
 
@@ -182,53 +213,69 @@ First public beta of the MANAS Personal AI Operating System.
 
 ### v0.1
 
-* Interactive command loop
-* Application launcher
+- Interactive command loop
+- Application launcher
 
 ### v0.2
 
-* Text typing
-* Web search
-* Modular action system
+- Text typing
+- Web search
+- Modular action system
 
 ### v0.2.1
 
-* Sequential command execution
-* Multiple commands
+- Sequential command execution
+- Multiple commands
 
 ### v0.3
 
-* Intent parsing
-* Stopword filtering
-* Platform detection
+- Intent parsing
+- Stopword filtering
+- Platform detection
 
 ### v0.4
 
-* Structured intent pipeline
-* Workflow execution improvements
-* Alias mapping
-* Sequential command parsing
+- Structured intent pipeline
+- Workflow execution improvements
+- Alias mapping
+- Sequential command parsing
 
 ### v0.4.1
 
-* Stability fixes
-* Regex improvements
-* Empty input handling
+- Stability fixes
+- Regex improvements
+- Empty input handling
 
 ### v0.5
 
 Major architectural update.
 
-Highlights:
+- MVC-style project organization
+- Workflow state tracking
+- Execution queue
+- Failure detection and recovery
+- PyQt6 desktop interface
+- QThread-based background execution
+- Floating console prototype
+- Interactive codebase visualization improvements
 
-* MVC-style project organization
-* Workflow state tracking
-* Execution queue
-* Failure detection and recovery
-* PyQt6 desktop interface
-* QThread-based background execution
-* Floating console prototype
-* Interactive codebase visualization improvements
+### v0.6
+
+Browser automation arrives.
+
+- Selenium attached to a dedicated MANAS Chrome instance (CDP on port 9222)
+- Modular `browser_tools/` package replacing the old `browser.py`
+- URL navigation, web search, YouTube search
+- Page scrolling (`scroll down`, `scroll up`, `scroll down 500`)
+- Two-queue worker pattern in `UI.py` (commands + responses) for future interactive loops
+- Rewritten `open_app` (fire-and-forget, no more timeouts)
+- Clean launch path — no Win+R, no CMD flashing
+
+### v0.6.2
+
+- Fixed 60-second Selenium attach delay (port check before driver call)
+- `scroll` interaction added to `browser_tools/interactions.py`
+- Retired `browser.py`
 
 ---
 
@@ -244,13 +291,13 @@ If you'd like to improve MANAS, feel free to open an issue or submit a pull requ
 
 The long-term goal of MANAS is to become a fully local AI operating system that can:
 
-* Understand natural language
-* Automate desktop applications
-* Interact with browsers
-* Execute complex workflows
-* Integrate local language models
-* Remember context across sessions
-* Assist developers and everyday users through a modern desktop interface
+- Understand natural language
+- Automate desktop applications
+- Interact with browsers
+- Execute complex workflows
+- Integrate local language models
+- Remember context across sessions
+- Assist developers and everyday users through a modern desktop interface
 
 Built with Python.
 Designed for learning.

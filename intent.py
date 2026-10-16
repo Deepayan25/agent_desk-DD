@@ -1,6 +1,6 @@
 from sys import platform
 
-from actions import __init__, browser, keyboard, system
+from actions import __init__, browser_tools, keyboard, system
 def parse_intent(user_input):
     user_input_lower = user_input.lower()
     words = user_input_lower.split()
@@ -8,7 +8,7 @@ def parse_intent(user_input):
     if not words:
         return None
     
-    primitive_actions = ["open", "wait", "enter", "del", "focus", "prevline","help"]
+    primitive_actions = ["open", "wait", "enter", "del", "focus", "prevline","help","scroll"]
     if words[0] in primitive_actions:
         return {"action": words[0], "query": " ".join(words[1:]), "platform": None}
     platform_map = {

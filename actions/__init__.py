@@ -1,6 +1,6 @@
 from .system import open_app, wait, show_help
 from .keyboard import focus_search, type_text, press_enter, backspace, prev_line
-from .browser import search_web, navigate_to, search_youtube
+from .browser_tools import open_url, search_web, search_youtube, navigate_to, scroll
 from .pywinauto import get_notepad, type_text as pywinauto_type_text, press_key as pywinauto_press_key
 actions = {
     "open": open_app,
@@ -14,7 +14,8 @@ actions = {
     "search": search_web,
     "play": search_youtube,
     "nav": navigate_to,
-
+    "openurl": open_url,
+    "scroll": scroll
 }
 
 aliases = {

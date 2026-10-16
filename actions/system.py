@@ -6,15 +6,12 @@ def open_app(target, platform=None):
         print("No app mentioned to open.")
         return {"success": False, "reason": "No target specified", "action": "open"}
     try:
-        result = subprocess.run(
+        subprocess.Popen(
             ["cmd", "/c", "start", "", target],
-            capture_output=True,
-            timeout=5,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
         )
-        if result.returncode != 0:
-            print(f"Failed to open {target}")
-            return {"success": False, "reason": f"App not found: {target}", "action": "open"}
-        time.sleep(2)
+        time.sleep(1)
         return {"success": True, "action": "open"}
     except Exception as e:
         return {"success": False, "reason": str(e), "action": "open"}
